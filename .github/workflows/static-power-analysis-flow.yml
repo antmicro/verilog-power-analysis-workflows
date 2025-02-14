@@ -114,6 +114,7 @@ jobs:
           cp $GITHUB_WORKSPACE/sta_commands OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
           cd OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
           sta sta_commands > static_power_analysis.log
+
       - name: Uploading static power analysis results
         uses: actions/upload-artifact@v4.3.3
         with:
