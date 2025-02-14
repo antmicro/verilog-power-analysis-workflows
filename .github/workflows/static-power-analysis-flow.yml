@@ -33,131 +33,51 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04, ubuntu-20.04]
-        compiler:
-          - {cc: clang, cxx: clang++}
-          - {cc: gcc, cxx: g++}
-        include:
-          # Build GCC 10 on ubuntu-20.04
-          - os: ubuntu-20.04
-            compiler: {cc: gcc-10, cxx: g++-10}
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
-    name: Build | ${{ matrix.os }} | ${{ matrix.compiler.cc }}
+    name: Build | ${{ matrix.os }}
     env:
       CI_BUILD_STAGE_NAME: build
       CI_RUNS_ON: ${{ matrix.os }}
-      CC: ${{ matrix.compiler.cc }}
-      CXX: ${{ matrix.compiler.cxx }}
-      CACHE_BASE_KEY: build-${{ matrix.os }}-${{ matrix.compiler.cc }}
-      CCACHE_MAXSIZE: 1000M  # Per build matrix entry (* 5 = 5000M in total)
+      CACHE_BASE_KEY: build-${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           path: repo
 
-      # - name: Cache $CCACHE_DIR
-      #   uses: actions/cache@v4
-      #   env:
-      #     CACHE_KEY: ${{ env.CACHE_BASE_KEY }}-ccache
-      #   with:
-      #     path: ${{ env.CCACHE_DIR }}
-      #     key: ${{ env.CACHE_KEY }}-${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ env.CACHE_KEY }}-
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libgoogle-perftools-dev numactl
 
-      - name: Hello World
-        run: echo "Hello World"
+      - name: Fetch Verilator
+        run: git clone https://github.com/antmicro/verilator -b "saif"
 
-  # test:
-  #   needs: build
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-22.04, ubuntu-20.04]
-  #       compiler:
-  #         - {cc: clang, cxx: clang++}
-  #         - {cc: gcc, cxx: g++}
-  #       reloc: [0]
-  #       suite: [dist-vlt-0, dist-vlt-1, dist-vlt-2, dist-vlt-3, vltmt-0, vltmt-1]
-  #       include:
-  #         # Test with GCC 10 on ubuntu-20.04, also test relocation
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: dist-vlt-0}
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: dist-vlt-1}
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: dist-vlt-2}
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: dist-vlt-3}
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: vltmt-0}
-  #         - {os: ubuntu-20.04, compiler: {cc: gcc-10, cxx: g++-10}, reloc: 1, suite: vltmt-1}
-  #         # Ubuntu 24.04 only on GCC; not passing on clang yet
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: dist-vlt-0}
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: dist-vlt-1}
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: dist-vlt-2}
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: dist-vlt-3}
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: vltmt-0}
-  #         - {os: ubuntu-24.04, compiler: {cc: gcc, cxx: g++}, suite: vltmt-1}
-  #   runs-on: ${{ matrix.os }}
-  #   name: Test | ${{ matrix.os }} | ${{ matrix.compiler.cc }} | ${{ matrix.reloc && 'reloc | ' || '' }} ${{ matrix.suite }}
-  #   env:
-  #     CI_BUILD_STAGE_NAME: test
-  #     CI_RUNS_ON: ${{ matrix.os }}
-  #     CI_RELOC: ${{ matrix.reloc }}
-  #     CC: ${{ matrix.compiler.cc }}
-  #     CXX: ${{ matrix.compiler.cxx }}
-  #     CACHE_BASE_KEY: test-${{ matrix.os }}-${{ matrix.compiler.cc }}-${{ matrix.reloc }}-${{ matrix.suite }}
-  #     CCACHE_MAXSIZE: 100M  # Per build per suite (* 5 * 5 = 2500M in total)
-  #     VERILATOR_ARCHIVE: verilator-${{ github.sha }}-${{ matrix.os }}-${{ matrix.compiler.cc }}.tar.gz
-  #   steps:
+      - name: Build Verilator
+        run: |
+          cd verilator
+          autoconf
+          ./configure --prefix $(pwd)
+          make -j $(nproc)
+          export PATH=$PATH:$(pwd)/bin/
+          cd ..
 
-  #     - name: Download tar archive
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: ${{ env.VERILATOR_ARCHIVE }}
-  #         path: ${{ github.workspace }}
+      - name: Fetch OpenSTA
+        run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
 
-  #     - name: Unpack tar archive
-  #       working-directory: ${{ github.workspace }}
-  #       run: tar -x -z -f ${{ env.VERILATOR_ARCHIVE }}
+      - name: Build OpenSTA
+        run: |
+          cd OpenSTA
+          cd ..
 
-  #     - name: Cache $CCACHE_DIR
-  #       uses: actions/cache@v4
-  #       env:
-  #         CACHE_KEY: ${{ env.CACHE_BASE_KEY }}-ccache2
-  #       with:
-  #         path: ${{ env.CCACHE_DIR }}
-  #         key: ${{ env.CACHE_KEY }}-${{ github.sha }}
-  #         restore-keys: |
-  #           ${{ env.CACHE_KEY }}-
+      - name: Fetch OpenROAD-flow-scripts
+        run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
-  #     - name: Install test dependencies
-  #       run: ./ci/ci-install.bash
+      - name: Build OpenROAD-flow-scripts
+        run: |
+          cd OpenROAD-flow-scripts
+          cd ..
 
-  #     - name: Test
-  #       env:
-  #         TESTS: ${{ matrix.suite }}
-  #       run: ./ci/ci-script.bash
-
-  # lint-py:
-  #   runs-on: ubuntu-22.04
-  #   name: Lint Python
-  #   env:
-  #     CI_BUILD_STAGE_NAME: build
-  #     CI_RUNS_ON: ubuntu-22.04
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         path: repo
-
-  #     - name: Install packages for build
-  #       run: ./ci/ci-install.bash
-
-  #   # We use specific version numbers, otherwise a Python package
-  #   # update may add a warning and break our build
-  #     - name: Install packages for lint
-  #       run: sudo pip3 install pylint==3.0.2 ruff==0.1.3 clang sphinx sphinx_rtd_theme sphinxcontrib-spelling breathe ruff
-
-  #     - name: Configure
-  #       run: autoconf && ./configure --enable-longtests --enable-ccwarn
-
-  #     - name: Lint
-  #       run: make -k lint-py
+      - name: Show contents
+        run: ls
