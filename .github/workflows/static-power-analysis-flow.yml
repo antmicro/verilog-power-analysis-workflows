@@ -49,7 +49,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev
+          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time
+          pip3 install pyyaml
 
       - name: Fetch Verilator
         run: git clone https://github.com/antmicro/verilator -b "saif"
@@ -90,7 +91,7 @@ jobs:
           cd OpenROAD-flow-scripts
           git submodule update --init --recursive tools/yosys
           cd tools/yosys
-          # make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
+          make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
 
       - name: Generate SAIF file from simulation trace
         run: |
@@ -106,6 +107,15 @@ jobs:
           cp -r saif_trace_example $GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/flow/designs/asap7/
           cp -r src/saif_trace_example $GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/flow/designs/src/
 
+      - name: Run Yosys synthesis
+        run: |
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/asap7/saif_trace_example/config.mk synth
+
       - name: Generate power consumption report
         run: |
-          echo "Generating power consumption report..."
+          export PATH=$PATH:$(pwd)/OpenSTA/app/
+          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+          cp $GITHUB_WORKSPACE/simx.saif OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
+          cd OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
+          ls
