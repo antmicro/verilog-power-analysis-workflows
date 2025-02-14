@@ -83,7 +83,7 @@ jobs:
         run: |
           cd OpenSTA
           mkdir build && cd build
-          cmake -DCUDD_DIR=$CUDD_INSTALL_DIR ../
+          cmake -DCUDD_DIR="/home/runner/work/static-power-verilator-flow/static-power-verilator-flow/repo/cudd/cudd_versions/cudd-3.0.0" ../
           make -j $(nproc)
           cd ..
           export PATH=$PATH:$(pwd)/app/
