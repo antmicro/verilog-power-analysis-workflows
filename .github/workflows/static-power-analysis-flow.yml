@@ -49,19 +49,18 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl swig cmake libeigen3-dev
+          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev
 
-      # - name: Fetch Verilator
-      #   run: git clone https://github.com/antmicro/verilator -b "saif"
+      - name: Fetch Verilator
+        run: git clone https://github.com/antmicro/verilator -b "saif"
 
-      # - name: Build Verilator
-      #   run: |
-      #     cd verilator
-      #     autoconf
-      #     ./configure --prefix $(pwd)
-      #     make -j $(nproc)
-      #     export PATH=$PATH:$(pwd)/bin/
-      #     cd ..
+      - name: Build Verilator
+        run: |
+          cd verilator
+          autoconf
+          ./configure --prefix $(pwd)
+          make -j $(nproc)
+          cd ..
 
       - name: Fetch CUDD
         run: git clone https://github.com/davidkebo/cudd
@@ -73,7 +72,6 @@ jobs:
           cd cudd-3.0.0
           ./configure --prefix $(pwd)
           make -j $(nproc) install
-          echo $CUDD_INSTALL_DIR
           cd ../../../
 
       - name: Fetch OpenSTA
@@ -83,11 +81,9 @@ jobs:
         run: |
           cd OpenSTA
           mkdir build && cd build
-          cmake -DCUDD_DIR="/home/runner/work/static-power-verilator-flow/static-power-verilator-flow/repo/cudd/cudd_versions/cudd-3.0.0" ../
+          cmake -DCUDD_DIR=$GITHUB_WORKSPACE/repo/cudd/cudd_versions/cudd-3.0.0 ../
           make -j $(nproc)
-          cd ..
-          export PATH=$PATH:$(pwd)/app/
-          cd ..
+          cd ../..
 
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
@@ -95,7 +91,10 @@ jobs:
       - name: Build OpenROAD-flow-scripts
         run: |
           cd OpenROAD-flow-scripts
-          cd ..
+          git submodule update --init --recursive tools/yosys
+          cd tools/yosys
+          make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
+          cd ../../../
 
       - name: Show contents
         run: ls
