@@ -48,8 +48,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apt-get update
-          apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libgoogle-perftools-dev numactl
+          sudo apt-get update
+          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libgoogle-perftools-dev numactl tcl swig cmake libeigen3-dev
 
       - name: Fetch Verilator
         run: git clone https://github.com/antmicro/verilator -b "saif"
