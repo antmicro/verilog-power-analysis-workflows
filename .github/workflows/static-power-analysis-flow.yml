@@ -79,7 +79,7 @@ jobs:
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
-      - name: Build OpenROAD-flow-scripts
+      - name: Build Yosys
         run: |
           cd OpenROAD-flow-scripts
           git submodule update --init --recursive tools/yosys
