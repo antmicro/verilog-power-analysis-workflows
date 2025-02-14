@@ -1,9 +1,5 @@
 ---
-# DESCRIPTION: Github actions config
-# This name is key to badges in README.rst, so we use the name build
-# SPDX-License-Identifier: LGPL-3.0-only OR Artistic-2.0
-
-name: static-power-analysis-flow
+name: static-power-verilator-flow
 
 on:
   push:
@@ -34,7 +30,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
-    name: Build | ${{ matrix.os }}
+    name: Static power verilator flow | ${{ matrix.os }}
     env:
       CI_BUILD_STAGE_NAME: build
       CI_RUNS_ON: ${{ matrix.os }}
@@ -46,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-11 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time
+          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time
           pip3 install pyyaml
 
       - name: Fetch Verilator
