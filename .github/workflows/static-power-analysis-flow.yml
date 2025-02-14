@@ -60,7 +60,6 @@ jobs:
           autoconf
           ./configure --prefix $(pwd)
           make -j $(nproc)
-          cd ..
 
       - name: Fetch CUDD
         run: git clone https://github.com/davidkebo/cudd
@@ -72,7 +71,6 @@ jobs:
           cd cudd-3.0.0
           ./configure --prefix $(pwd)
           make -j $(nproc) install
-          cd ../../../
 
       - name: Fetch OpenSTA
         run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
@@ -83,7 +81,6 @@ jobs:
           mkdir build && cd build
           cmake -DCUDD_DIR=$GITHUB_WORKSPACE/repo/cudd/cudd_versions/cudd-3.0.0 ../
           make -j $(nproc)
-          cd ../..
 
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
@@ -94,7 +91,6 @@ jobs:
           git submodule update --init --recursive tools/yosys
           cd tools/yosys
           # make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
-          cd ../../../
 
       - name: Generate SAIF file from simulation trace
         run: |
