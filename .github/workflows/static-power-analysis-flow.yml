@@ -93,8 +93,23 @@ jobs:
           cd OpenROAD-flow-scripts
           git submodule update --init --recursive tools/yosys
           cd tools/yosys
-          make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
+          # make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/tools/install/yosys install
           cd ../../../
 
-      - name: Show contents
-        run: ls
+      - name: Generate SAIF file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+          cd verilator/examples/saif_example/
+          verilator --cc --exe --build --trace-saif -j -Wno-latch gcd.v saif_trace.cpp
+          ./obj_dir/Vgcd
+          cp simx.saif $GITHUB_WORKSPACE/
+
+      - name: Prepare sources for Yosys synthesis
+        run: |
+          cd verilator/examples/saif_example/
+          cp -r saif_trace_example $GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/flow/designs/asap7/
+          cp -r src/saif_trace_example $GITHUB_WORKSPACE/repo/OpenROAD-flow-scripts/flow/designs/src/
+
+      - name: Generate power consumption report
+        run: |
+          echo "Generating power consumption report..."
