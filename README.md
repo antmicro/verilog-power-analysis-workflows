@@ -2,13 +2,13 @@
 
 Copyright (c) 2025 [Antmicro](https://www.antmicro.com)
 
-Antmicro's demonstration of static power analysis workflow from SAIF trace file with [Verilator](https://github.com/verilator/verilator) and [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA).
+Antmicro's demonstration of static power analysis workflow from SAIF trace files with [Verilator](https://github.com/verilator/verilator) and [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA).
 
 ## Introduction
 
-This workflow was tested on Ubuntu 24.04 and Debian 12.
+This workflow has been tested on Ubuntu 24.04 and Debian 12.
 
-To demonstrate the workflow of static power analysis from SAIF trace file with Verilator and OpenSTA, we have prepared an [instruction](#workflow) and a simple [example](https://github.com/antmicro/verilator/tree/58f3d66076d5af8c2895f395a4a49deda075a580/examples/saif_example).
+To demonstrate the workflow of static power analysis from SAIF trace files with Verilator and OpenSTA, an [instruction](#workflow) and a simple [example](https://github.com/antmicro/verilator/tree/58f3d66076d5af8c2895f395a4a49deda075a580/examples/saif_example) have been prepared.
 
 ## Workflow
 
@@ -16,9 +16,9 @@ To demonstrate the workflow of static power analysis from SAIF trace file with V
 
 This instruction assumes that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
 
-You will need to clone and build these projects:
+The following projects need to be cloned and built:
 
-- [Verilator](https://github.com/antmicro/verilator) from the branch `saif`. You can build it by going into the project directory and executing these commands:
+- [Verilator](https://github.com/antmicro/verilator) (`saif` branch). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
@@ -48,7 +48,7 @@ make -j $(nproc) install
 export CUDD_INSTALL_DIR=$(pwd)
 ```
 
-After that you can finally build the OpenSTA by executing these commands from the top directory:
+After that, OpenSTA can be built by executing the following commands from the top directory:
 
 <!-- name="build-open-sta" -->
 ```
