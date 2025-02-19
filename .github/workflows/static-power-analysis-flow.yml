@@ -42,75 +42,56 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev
+          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx
           pip3 install pyyaml
+          PIPX_BIN_DIR=/usr/bin/ pipx install git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
         run: git clone https://github.com/antmicro/verilator -b "saif"
 
       - name: Build Verilator
         run: |
-          cd verilator
-          autoconf
-          ./configure --prefix $(pwd)
-          make -j $(nproc)
+          tuttest README.md build-verilator | bash -
 
       - name: Fetch CUDD
         run: git clone https://github.com/davidkebo/cudd
 
       - name: Build CUDD
         run: |
-          cd cudd/cudd_versions
-          tar xvfz cudd-3.0.0.tar.gz
-          cd cudd-3.0.0
-          ./configure --prefix $(pwd)
-          make -j $(nproc) install
+          tuttest README.md build-cudd | bash -
 
       - name: Fetch OpenSTA
         run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
 
       - name: Build OpenSTA
         run: |
-          cd OpenSTA
-          mkdir build && cd build
-          cmake -DCUDD_DIR=$GITHUB_WORKSPACE/cudd/cudd_versions/cudd-3.0.0 ../
-          make -j $(nproc)
+          export CUDD_INSTALL_DIR=$(pwd)/cudd/cudd_versions/cudd-3.0.0
+
+          tuttest README.md build-open-sta | bash -
 
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
       - name: Build Yosys
         run: |
-          cd OpenROAD-flow-scripts
-          git submodule update --init --recursive tools/yosys
-          cd tools/yosys
-          make -j $(nproc) PREFIX=$GITHUB_WORKSPACE/OpenROAD-flow-scripts/tools/install/yosys install
+          tuttest README.md build-yosys | bash -
 
       - name: Generate SAIF file from simulation trace
         run: |
           export PATH=$PATH:$(pwd)/verilator/bin/
-          cd verilator/examples/saif_example/
-          verilator --cc --exe --build --trace-saif -j -Wno-latch gcd.v saif_trace.cpp
-          ./obj_dir/Vgcd
-          cp simx.saif $GITHUB_WORKSPACE/
-          cp sta_commands $GITHUB_WORKSPACE/
+
+          tuttest README.md generate-saif-file | bash -
 
       - name: Prepare sources for Yosys synthesis
         run: |
-          cd verilator/examples/saif_example/
-          cp -r saif_trace_example $GITHUB_WORKSPACE/OpenROAD-flow-scripts/flow/designs/asap7/
-          cp -r src/saif_trace_example $GITHUB_WORKSPACE/OpenROAD-flow-scripts/flow/designs/src/
+          tuttest README.md copy-model-sources | bash -
 
       - name: Run Yosys synthesis
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/asap7/saif_trace_example/config.mk synth
+          tuttest README.md run-yosys-synthesis | bash -
 
       - name: Generate power consumption report
         run: |
           export PATH=$PATH:$(pwd)/OpenSTA/app/
-          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
-          cp $GITHUB_WORKSPACE/simx.saif OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
-          cp $GITHUB_WORKSPACE/sta_commands OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
-          cd OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
-          sta sta_commands
+
+          tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
