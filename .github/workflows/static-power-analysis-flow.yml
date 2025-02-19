@@ -43,8 +43,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx
-          pip3 install pyyaml
-          PIPX_BIN_DIR=/usr/bin/ pipx install git+https://github.com/antmicro/tuttest
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
         run: git clone https://github.com/antmicro/verilator -b "saif"
