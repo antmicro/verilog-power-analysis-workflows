@@ -81,6 +81,7 @@ From the `examples/saif_example` directory in the `Verilator` project, run veril
 
 <!-- name="generate-saif-file" -->
 ```
+cp -r saif_example verilator/examples/
 cd verilator/examples/saif_example/
 verilator --cc --exe --build --trace-saif -j -Wno-latch gcd.v saif_trace.cpp
 ./obj_dir/Vgcd
