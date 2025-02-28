@@ -28,7 +28,7 @@ autoconf
 ./configure --prefix $(pwd)
 make -j $(nproc)
 
-export PATH=$PATH:$(pwd)/verilator/bin/
+export PATH=$PATH:$(pwd)/bin/
 ```
 
 Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PATH` environmental variable.
