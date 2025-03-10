@@ -46,7 +46,7 @@ jobs:
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator -b "saif"
+        run: git clone https://github.com/verilator/verilator
 
       - name: Build Verilator
         run: |

@@ -18,7 +18,7 @@ This instruction assumes that all required projects are located in the same dire
 
 The following projects need to be cloned and built:
 
-- [Verilator](https://github.com/antmicro/verilator) (`saif` branch). It can be built by going into the project directory and executing these commands:
+- [Verilator](https://github.com/verilator/verilator). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
