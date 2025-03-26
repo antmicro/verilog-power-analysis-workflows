@@ -94,3 +94,104 @@ jobs:
           export PATH=$PATH:$(pwd)/OpenSTA/app/
 
           tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
+
+  peak-power-analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    name: Peak power analysis flow | ${{ matrix.os }}
+    env:
+      CI_BUILD_STAGE_NAME: build
+      CI_RUNS_ON: ${{ matrix.os }}
+      CACHE_BASE_KEY: build-${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+      - name: Fetch Verilator
+        run: git clone https://github.com/verilator/verilator
+
+      - name: Build Verilator
+        run: |
+          tuttest README.md build-verilator | bash -
+
+      - name: Fetch CUDD
+        run: git clone https://github.com/davidkebo/cudd
+
+      - name: Build CUDD
+        run: |
+          tuttest README.md build-cudd | bash -
+
+      - name: Fetch OpenSTA
+        run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
+
+      - name: Build OpenSTA
+        run: |
+          export CUDD_INSTALL_DIR=$(pwd)/cudd/cudd_versions/cudd-3.0.0
+
+          tuttest README.md build-open-sta | bash -
+
+      - name: Fetch OpenROAD-flow-scripts
+        run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+
+      - name: Build Yosys
+        run: |
+          tuttest README.md build-yosys | bash -
+
+      - name: Fetch trace2power
+        run: git clone https://github.com/antmicro/trace2power -b "72335-peak-power-analysis"
+
+      - name: Build trace2power
+        run: |
+          env
+          source $HOME/.cargo/env
+          cd trace2power
+          cargo build --release
+
+      - name: Generate VCD file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+
+          cd peak_power_example/
+          verilator --cc --exe --build --trace -j -Wno-latch gcd.v vcd_trace.cpp
+          ./obj_dir/Vgcd
+
+      - name: Process VCD with trace2power
+        run: |
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
+          cd peak_power_example/
+          mkdir output
+          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
+
+      - name: Prepare sources for Yosys synthesis
+        run: |
+          cp -r peak_power_example/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
+          cp -r peak_power_example/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
+
+      - name: Run Yosys synthesis
+        run: |
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+
+      - name: Generate peak power consumption report
+        run: |
+          export PATH=$PATH:$(pwd)/OpenSTA/app/
+
+          cp -r peak_power_example/output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          cp peak_power_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+
+          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+
+          cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          
+          python3 peak_power.py --input_dir output
