@@ -118,7 +118,7 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
       - name: Fetch Verilator
-        run: git clone https://github.com/verilator/verilator
+        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
 
       - name: Build Verilator
         run: |
@@ -157,20 +157,8 @@ jobs:
           cd trace2power
           cargo build --release
 
-      - name: Generate VCD file from simulation trace
-        run: |
-          export PATH=$PATH:$(pwd)/verilator/bin/
-
-          cd peak_power_example/
-          verilator --cc --exe --build --trace -j -Wno-latch gcd.v vcd_trace.cpp
-          ./obj_dir/Vgcd
-
-      - name: Process VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/trace2power/target/release/
-          cd peak_power_example/
-          mkdir output
-          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28.git
 
       - name: Prepare sources for Yosys synthesis
         run: |
@@ -181,6 +169,26 @@ jobs:
         run: |
           cd OpenROAD-flow-scripts
           make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+
+      - name: Copy synthesized model to example directory
+        run: |
+          cp OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v peak_power_example/gcd.v
+
+      - name: Generate VCD file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+          export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+
+          cd peak_power_example/
+          verilator --cc --exe --build --trace -j -Wno-fatal -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
+          ./obj_dir/Vgcd
+
+      - name: Process VCD with trace2power
+        run: |
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
+          cd peak_power_example/
+          mkdir -p output
+          trace2power --clk-freq 20000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
 
       - name: Generate peak power consumption report
         run: |
@@ -195,3 +203,9 @@ jobs:
           cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
           
           python3 peak_power.py --input_dir output
+
+      - name: Upload artifacts
+         uses: actions/upload-artifact@v4.3.3
+         with:
+           name: peak power analysis report
+           path: OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/report.png

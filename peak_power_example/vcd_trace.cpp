@@ -16,7 +16,6 @@
 int errors = 0;
 
 unsigned long long main_time = 0;
-
 double sc_time_stamp() { return static_cast<double>(main_time); }
 
 const char* trace_name() {
@@ -34,50 +33,32 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<VerilatedVcdC> tfp{new VerilatedVcdC};
 
-    static constexpr int SIMULATION_DURATION{200};
+    static constexpr int SIMULATION_DURATION{150000};
     top->trace(tfp.get(), SIMULATION_DURATION);
 
     tfp->open(trace_name());
 
-    // #clk_period reset = 1;
-    // #clk_period reset = 0;
+    while (main_time <= SIMULATION_DURATION) {
+        top->clk = !top->clk;
 
-    // #clk_period a = 1053775287; b = 412654; req_val = 1;
-    // #clk_period req_val = 0;
-    // #clk_period
-    // #clk_period
-    // #clk_period
-    // #clk_period
-    // #clk_period
-    // #clk_period resp_rdy = 1;
-    // #clk_period resp_rdy = 0;
-    // #clk_period
-
-    top->clk = 0;
-    top->req_val = 0;
-    top->resp_rdy = 0;
-    top->reset = 0;
-
-    for (int cycle = 0; cycle < 30; ++cycle) {
-        top->clk = 0;
-
-        top->eval();
-        tfp->dump(static_cast<unsigned int>(main_time));
-        main_time += 2500;
-
-        top->clk = 1;
-
-        if (cycle == 5) {
-            top->req_msg = rand() & 0xffffffff;
-            top->req_val = 1;
-        } else if (cycle == 6) {
-            top->req_val = 0;
+        if (main_time == 20000) {
+            top->reset = 1;
         }
-
-        if (cycle == 15) {
-            top->resp_rdy = 1;
-        } else if (cycle == 16) {
-            top->resp_rdy = 0;
+        if (main_time == 25000) {
+            top->reset = 0;
+        }
+        if (main_time == 40000) {
+            top->req_msg = rand() & 0xffffffff;
+            top->req_val = 0x1;
+        }
+        if (main_time == 45000) {
+            top->req_val = 0x0;
+        }
+        if (main_time == 70000) {
+            top->resp_rdy = 0x1;
+        }
+        if (main_time == 75000) {
+            top->resp_rdy = 0x0;
         }
 
         top->eval();

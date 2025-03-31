@@ -55,18 +55,23 @@ files = sorted(files)
 power_results = []
 clock_cycles_indices = []
 
+peak_power = 0
+peak_power_clock_cycle = 0
+
 current_clock_cycle = 0
 for file in files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle no. {current_clock_cycle}')
-    current_clock_cycle += 1
-
     os.symlink(args.input_dir + "/" + file, input_trace_file)
     subprocess.run([open_sta_command, "-exit", open_sta_script], capture_output=False, text=True)
     report_contents = read_from_file(power_report_file)
     total_power = search_for_total_power(report_contents)
+    if (total_power > peak_power):
+        peak_power = total_power
+        peak_power_clock_cycle = current_clock_cycle
     power_results.append(total_power)
     os.remove(input_trace_file)
+    current_clock_cycle += 1
 
 plt.plot(clock_cycles_indices, power_results, marker='o', linestyle='-', color='g')
 
@@ -74,5 +79,7 @@ plt.title("Power consumption over time")
 plt.xlabel("Clock cycle")
 plt.ylabel("Power consumption (Watts)")
 plt.grid(True)
+
+print(f"Maximum power consumption of a single clock cycle is {peak_power} Watts and occurred in {peak_power_clock_cycle} clock cycle")
 
 plt.savefig('report.png')
