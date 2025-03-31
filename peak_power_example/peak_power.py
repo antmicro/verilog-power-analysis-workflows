@@ -63,7 +63,7 @@ for file in files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle no. {current_clock_cycle}')
     os.symlink(args.input_dir + "/" + file, input_trace_file)
-    subprocess.run([open_sta_command, "-exit", open_sta_script], capture_output=False, text=True)
+    subprocess.run([open_sta_command, "-exit", open_sta_script], capture_output=True, text=True)
     report_contents = read_from_file(power_report_file)
     total_power = search_for_total_power(report_contents)
     if (total_power > peak_power):
