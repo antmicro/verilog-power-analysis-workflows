@@ -99,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     name: Peak power analysis flow | ${{ matrix.os }}
     env:
@@ -205,7 +205,7 @@ jobs:
           python3 peak_power.py --input_dir output
 
       - name: Upload artifacts
-         uses: actions/upload-artifact@v4.3.3
-         with:
-           name: peak power analysis report
-           path: OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/report.png
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: peak power analysis report
+          path: OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/report.png
