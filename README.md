@@ -1,20 +1,18 @@
-# Static power analysis workflow
+# Power analysis workflows
 
 Copyright (c) 2025 [Antmicro](https://www.antmicro.com)
 
-Antmicro's demonstration of static power analysis workflow from SAIF trace files with [Verilator](https://github.com/verilator/verilator) and [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA).
+Antmicro's demonstration of power analysis workflows with [Verilator](https://github.com/verilator/verilator), [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA) and [trace2power](https://github.com/antmicro/trace2power).
 
 ## Introduction
 
-This workflow has been tested on Ubuntu 24.04 and Debian 12.
+These workflows have been tested on Ubuntu 24.04 and Debian 12.
 
-To demonstrate the workflow of static power analysis from SAIF trace files with Verilator and OpenSTA, an [instruction](#workflow) and a simple [example](https://github.com/antmicro/verilator/tree/58f3d66076d5af8c2895f395a4a49deda075a580/examples/saif_example) have been prepared.
+To demonstrate workflows of power analysis with Verilator and OpenSTA, instructions below and a simple `gcd` example have been prepared.
 
-## Workflow
+## Prerequisites
 
-### Prerequisites
-
-This instruction assumes that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
+These instructions assumes that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
 
 The following projects need to be cloned and built:
 
@@ -75,28 +73,26 @@ cd tools/yosys
 make -j $(nproc) PREFIX=../install/yosys install
 ```
 
-### Generating SAIF file from trace
+- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from branch `72335-peak-power-analysis` in case of peak power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
-From the `examples/saif_example` directory in the `Verilator` project, run verilation and compile the model to an executable with the SAIF trace flag enabled `--trace-saif` and then run a simulation with the generated binary:
-
-<!-- name="generate-saif-file" -->
+<!-- name="build-trace-to-power" -->
 ```
-cp -r saif_example verilator/examples/
-cd verilator/examples/saif_example/
-verilator --cc --exe --build --trace-saif -j -Wno-latch gcd.v saif_trace.cpp
-./obj_dir/Vgcd
+cd trace2power
+cargo build --release
+
+export PATH=$PATH:$(pwd)/target/release/
 ```
 
-This will generate the `simx.saif` file in the current directory with the SAIF trace output.
+- [asap7sc7p5t_28](https://github.com/The-OpenROAD-Project/asap7sc7p5t_28) sources.
 
 ### Prepare model sources and run Yosys synthesis
 
-For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis in the `OpenROAD-flow-scripts` project directory. This example workflow uses the `asap7` platform. From the `examples/saif_example` directory in the `Verilator` project, copy `saif_trace_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/saif_trace_example` to `OpenROAD-flow-scripts/flow/designs/src/`
+For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. From the `design` directory, copy `gcd_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/gcd_example` to `OpenROAD-flow-scripts/flow/designs/src/`
 
 <!-- name="copy-model-sources" -->
 ```
-cp -r verilator/examples/saif_example/saif_trace_example OpenROAD-flow-scripts/flow/designs/asap7/
-cp -r verilator/examples/saif_example/src/saif_trace_example OpenROAD-flow-scripts/flow/designs/src/
+cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
+cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
 ```
 
 Then go to the `OpenROAD-flow-scripts` project top directory and run the `Yosys` synthesis:
@@ -104,19 +100,36 @@ Then go to the `OpenROAD-flow-scripts` project top directory and run the `Yosys`
 <!-- name="run-yosys-synthesis" -->
 ```
 cd OpenROAD-flow-scripts
-make -C flow DESIGN_CONFIG=designs/asap7/saif_trace_example/config.mk synth
+make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
 ```
 
-Result of the synthesis will be located in the `~/dev/OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/` directory.
+Finally copy the result of synthesis to relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v` to `saif_example/gcd.v`.
+
+## Static power analysis workflow
+
+### Generating SAIF file from trace
+
+From the `saif_example` directory, run verilation and compile the model to an executable with the SAIF trace flag enabled `--trace-saif` and then run a simulation with the generated binary:
+
+<!-- name="generate-saif-file" -->
+```
+export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+
+cd saif_example/
+verilator --cc --exe --build --trace-saif -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
+./obj_dir/Vgcd
+```
+
+This will generate the `simx.saif` file in the current directory with the SAIF trace output.
 
 ### Generating power consumption report
 
-Copy previously generated SAIF file from simulation trace and `sta` commands file to the synthesis result directory:
+Copy previously generated SAIF file from simulation trace and `power.tcl` commands file to the synthesis result directory:
 
 <!-- name="copy-required-artifacts" -->
 ```
-cp verilator/examples/saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
-cp verilator/examples/saif_example/sta_commands OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
+cp saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp saif_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
@@ -130,8 +143,8 @@ Go to the synthesis results directory and then run `sta` with commands:
 
 <!-- name="execute-sta-commands" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/saif_trace_example/base/
-sta sta_commands
+cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+sta power.tcl
 ```
 
 or you can just execute them manually after running `sta` in the synthesis results directory:
@@ -148,22 +161,91 @@ link_design gcd
 
 read_sdc 1_synth.sdc
 
-read_saif -scope gcd simx.saif
+read_saif -scope gcd_tb/gcd simx.saif
 report_power
 ```
 
 This will generate power consumption report that should look like this:
 
 ```
+Annotated 159 pin activities.
 Group                  Internal  Switching    Leakage      Total
                           Power      Power      Power      Power (Watts)
 ----------------------------------------------------------------
-Sequential             5.19e-05   5.18e-06   5.34e-09   5.71e-05  43.5%
-Combinational          4.15e-05   3.26e-05   2.17e-08   7.42e-05  56.5%
+Sequential             1.26e-05   9.02e-07   5.50e-09   1.36e-05  39.9%
+Combinational          1.16e-05   8.83e-06   2.21e-08   2.04e-05  60.1%
 Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 ----------------------------------------------------------------
-Total                  9.35e-05   3.78e-05   2.70e-08   1.31e-04 100.0%
-                          71.2%      28.8%       0.0%
+Total                  2.42e-05   9.73e-06   2.76e-08   3.40e-05 100.0%
+                          71.3%      28.6%       0.1%
+```
+
+## Peak power analysis workflow
+
+### Generating VCD file from trace
+
+From the `peak_power_example` directory, run verilation and compile the model to an executable with the trace flag enabled `--trace` and then run a simulation with the generated binary:
+
+<!-- name="generate-vcd-file" -->
+```
+export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+
+cd peak_power_example/
+verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
+./obj_dir/Vgcd
+```
+
+This will generate the `simx.vcd` file in the current directory with the VCD trace output.
+
+### Processing VCD file to per clock cycle TCL scripts
+
+To generate per clock cycle TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
+
+<!-- name="process-vcd-output" -->
+```
+cd peak_power_example/
+mkdir -p output
+trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
+```
+
+### Generating peak power report
+
+Copy previously generated TCL files with required scripts to the synthesis result directory:
+
+<!-- name="copy-required-peak-power-artifacts" -->
+```
+cp -r peak_power_example/output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp peak_power_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+```
+
+For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
+
+<!-- name="export-liberty-path" -->
+```
+export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+```
+
+Go to the synthesis results directory and then run the peak power script:
+
+<!-- name="execute-peak-power-script" -->
+```
+cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+python3 peak_power.py --input_dir output
+```
+
+This will visualize power consumption over time and output maximum encountered value:
+
+```
+...
+Processing clock cycle #23
+Processing clock cycle #24
+Processing clock cycle #25
+Processing clock cycle #26
+Processing clock cycle #27
+Processing clock cycle #28
+Processing clock cycle #29
+Maximum power consumption of a single clock cycle is 0.000205 Watts and occurred in clock cycle #0
 ```

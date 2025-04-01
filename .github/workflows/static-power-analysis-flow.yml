@@ -1,5 +1,5 @@
 ---
-name: static-power-verilator-flow
+name: power-analysis-verilator-flow
 
 on:
   push:
@@ -24,11 +24,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  flow:
+  static-power-analysis:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     name: Static power verilator flow | ${{ matrix.os }}
     env:
@@ -76,17 +76,15 @@ jobs:
           tuttest README.md build-yosys | bash -
 
       - name: Fetch asap7 sources
-        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28.git
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
 
       - name: Prepare sources for Yosys synthesis
         run: |
-          cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
-          cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
+          tuttest README.md copy-model-sources | bash -
 
       - name: Run Yosys synthesis
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+          tuttest README.md run-yosys-synthesis | bash -
 
       - name: Copy synthesized model to example directory
         run: |
@@ -95,24 +93,14 @@ jobs:
       - name: Generate SAIF file from simulation trace
         run: |
           export PATH=$PATH:$(pwd)/verilator/bin/
-          export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
 
-          cd saif_example/
-          verilator --cc --exe --build --trace-saif -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
-          ./obj_dir/Vgcd
+          tuttest README.md generate-saif-file | bash -
 
       - name: Generate power consumption report
         run: |
           export PATH=$PATH:$(pwd)/OpenSTA/app/
 
-          cp -r saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-          cp saif_example/sta_commands OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-
-          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
-
-          cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-          
-          sta power.tcl
+          tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
 
   peak-power-analysis:
     strategy:
@@ -172,21 +160,19 @@ jobs:
       - name: Build trace2power
         run: |
           source $HOME/.cargo/env
-          cd trace2power
-          cargo build --release
+
+          tuttest README.md build-trace-to-power | bash -
 
       - name: Fetch asap7 sources
         run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28.git
 
       - name: Prepare sources for Yosys synthesis
         run: |
-          cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
-          cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
+          tuttest README.md copy-model-sources | bash -
 
       - name: Run Yosys synthesis
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+          tuttest README.md run-yosys-synthesis | bash -
 
       - name: Copy synthesized model to example directory
         run: |
@@ -195,32 +181,20 @@ jobs:
       - name: Generate VCD file from simulation trace
         run: |
           export PATH=$PATH:$(pwd)/verilator/bin/
-          export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
 
-          cd peak_power_example/
-          verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
-          ./obj_dir/Vgcd
+          tuttest README.md generate-vcd-file | bash -
 
       - name: Process VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
-          cd peak_power_example/
-          mkdir -p output
-          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
 
-      - name: Generate peak power consumption report
+          tuttest README.md process-vcd-output | bash -
+      
+      - name: Generate peak power report
         run: |
           export PATH=$PATH:$(pwd)/OpenSTA/app/
 
-          cp -r peak_power_example/output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-          cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-          cp peak_power_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-
-          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
-
-          cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-          
-          python3 peak_power.py --input_dir output
+          tuttest README.md copy-required-peak-power-artifacts,export-liberty-path,execute-peak-power-script | bash -
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4.3.3
