@@ -9,6 +9,5 @@ link_design gcd
 
 read_sdc 1_synth.sdc
 
-read_saif -scope gcd simx.saif
+read_saif -scope gcd_tb/gcd simx.saif
 report_power
-exit

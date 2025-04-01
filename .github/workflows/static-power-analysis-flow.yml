@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     name: Static power verilator flow | ${{ matrix.os }}
     env:
@@ -46,7 +46,7 @@ jobs:
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
-        run: git clone https://github.com/verilator/verilator
+        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
 
       - name: Build Verilator
         run: |
@@ -75,25 +75,44 @@ jobs:
         run: |
           tuttest README.md build-yosys | bash -
 
-      - name: Generate SAIF file from simulation trace
-        run: |
-          export PATH=$PATH:$(pwd)/verilator/bin/
-
-          tuttest README.md generate-saif-file | bash -
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28.git
 
       - name: Prepare sources for Yosys synthesis
         run: |
-          tuttest README.md copy-model-sources | bash -
+          cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
+          cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
 
       - name: Run Yosys synthesis
         run: |
-          tuttest README.md run-yosys-synthesis | bash -
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+
+      - name: Copy synthesized model to example directory
+        run: |
+          cp OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v saif_example/gcd.v
+
+      - name: Generate SAIF file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+          export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+
+          cd saif_example/
+          verilator --cc --exe --build --trace-saif -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
+          ./obj_dir/Vgcd
 
       - name: Generate power consumption report
         run: |
           export PATH=$PATH:$(pwd)/OpenSTA/app/
 
-          tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
+          cp -r saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          cp saif_example/sta_commands OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+
+          export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+
+          cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          
+          sta power.tcl
 
   peak-power-analysis:
     strategy:
@@ -152,7 +171,6 @@ jobs:
 
       - name: Build trace2power
         run: |
-          env
           source $HOME/.cargo/env
           cd trace2power
           cargo build --release
@@ -162,8 +180,8 @@ jobs:
 
       - name: Prepare sources for Yosys synthesis
         run: |
-          cp -r peak_power_example/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
-          cp -r peak_power_example/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
+          cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
+          cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
 
       - name: Run Yosys synthesis
         run: |
@@ -180,7 +198,7 @@ jobs:
           export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
 
           cd peak_power_example/
-          verilator --cc --exe --build --trace -j -Wno-fatal -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
+          verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
           ./obj_dir/Vgcd
 
       - name: Process VCD with trace2power
@@ -188,7 +206,7 @@ jobs:
           export PATH=$PATH:$(pwd)/trace2power/target/release/
           cd peak_power_example/
           mkdir -p output
-          trace2power --clk-freq 20000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
+          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
 
       - name: Generate peak power consumption report
         run: |

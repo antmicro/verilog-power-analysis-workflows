@@ -37,27 +37,41 @@ int main(int argc, char** argv) {
     Verilated::traceEverOn(true);
     Verilated::commandArgs(argc, argv);
 
-    std::unique_ptr<Vgcd> top{new Vgcd};
+    std::unique_ptr<Vgcd> top{new Vgcd{"gcd_tb"}};
 
     std::unique_ptr<VerilatedSaifC> tfp{new VerilatedSaifC};
 
-    static constexpr int SIMULATION_DURATION{10000};
+    static constexpr int SIMULATION_DURATION{150000};
     top->trace(tfp.get(), SIMULATION_DURATION);
 
     tfp->open(trace_name());
 
-    top->clk = 0;
-
-    while (main_time < SIMULATION_DURATION) {
+    while (main_time <= SIMULATION_DURATION) {
         top->clk = !top->clk;
-        top->req_msg = rand() & 0xffffffff;
-        top->req_val = rand() & 0x1;
-        top->reset = rand() & 0x1;
-        top->resp_rdy = rand() & 0x1;
+
+        if (main_time == 20000) {
+            top->reset = 1;
+        }
+        if (main_time == 25000) {
+            top->reset = 0;
+        }
+        if (main_time == 40000) {
+            top->req_msg = rand() & 0xffffffff;
+            top->req_val = 0x1;
+        }
+        if (main_time == 45000) {
+            top->req_val = 0x0;
+        }
+        if (main_time == 70000) {
+            top->resp_rdy = 0x1;
+        }
+        if (main_time == 75000) {
+            top->resp_rdy = 0x0;
+        }
 
         top->eval();
         tfp->dump(static_cast<unsigned int>(main_time));
-        ++main_time;
+        main_time += 2500;
     }
     
     tfp->close();
