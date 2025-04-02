@@ -31,46 +31,17 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PATH` environmental variable.
 
-- [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA). This dependency requires the [CUDD](https://github.com/davidkebo/cudd) project. Clone the project and then build it by executing:
+- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
-<!-- name="build-cudd" -->
-```
-cd cudd/cudd_versions
-
-tar xvfz cudd-3.0.0.tar.gz
-cd cudd-3.0.0
-
-./configure --prefix $(pwd)
-make -j $(nproc) install
-
-export CUDD_INSTALL_DIR=$(pwd)
-```
-
-After that, OpenSTA can be built by executing the following commands from the top directory:
-
-<!-- name="build-open-sta" -->
-```
-cd OpenSTA
-
-mkdir build && cd build
-cmake -DCUDD_DIR=$CUDD_INSTALL_DIR ../
-make -j $(nproc)
-
-cd ..
-export PATH=$PATH:$(pwd)/app/
-```
-
-Keep in mind to add the directory where the `sta` binary is located to the `PATH` environmental variable.
-
-- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys`. To build `Yosys` in `OpenROAD-flow-scripts`, you will also need to clone its submodule:
-
-<!-- name="build-yosys" -->
+<!-- name="build-openroad" -->
 ```
 cd OpenROAD-flow-scripts
 
-git submodule update --init --recursive tools/yosys
-cd tools/yosys
-make -j $(nproc) PREFIX=../install/yosys install
+git submodule update --init --recursive tools/yosys tools/OpenROAD
+./tools/OpenROAD/etc/DependencyInstaller.sh -common
+./build_openroad.sh -t $(nproc) --local
+
+export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
 - [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from branch `72335-peak-power-analysis` in case of peak power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
@@ -85,9 +56,9 @@ export PATH=$PATH:$(pwd)/target/release/
 
 - [asap7sc7p5t_28](https://github.com/The-OpenROAD-Project/asap7sc7p5t_28) sources.
 
-### Prepare model sources and run Yosys synthesis
+### Process model sources with Yosys and OpenROAD
 
-For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. From the `design` directory, copy `gcd_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/gcd_example` to `OpenROAD-flow-scripts/flow/designs/src/`
+For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route step in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. From the `design` directory, copy `gcd_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/gcd_example` to `OpenROAD-flow-scripts/flow/designs/src/`
 
 <!-- name="copy-model-sources" -->
 ```
@@ -101,6 +72,14 @@ Then go to the `OpenROAD-flow-scripts` project top directory and run the `Yosys`
 ```
 cd OpenROAD-flow-scripts
 make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
+```
+
+After that you can run place and route step:
+
+<!-- name="run-place-and-route" -->
+```
+cd OpenROAD-flow-scripts
+make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
 ```
 
 Finally copy the result of synthesis to relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v` to `saif_example/gcd.v`.
@@ -139,15 +118,15 @@ For liberty files paths simplicity, you can export the path to their directory a
 export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
 ```
 
-Go to the synthesis results directory and then run `sta` with commands:
+Go to the synthesis results directory and then run `openroad` with commands:
 
-<!-- name="execute-sta-commands" -->
+<!-- name="execute-openroad-commands" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 openroad power.tcl -exit
 ```
 
-or you can just execute them manually after running `sta` in the synthesis results directory:
+or you can just execute them manually after running `openroad` in the synthesis results directory:
 
 ```
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
@@ -156,8 +135,7 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
-read_verilog 1_synth.v
-link_design gcd
+read_verilog 6_final.odb
 
 read_sdc 1_synth.sdc
 
@@ -172,14 +150,14 @@ Annotated 159 pin activities.
 Group                  Internal  Switching    Leakage      Total
                           Power      Power      Power      Power (Watts)
 ----------------------------------------------------------------
-Sequential             1.26e-05   9.02e-07   5.50e-09   1.36e-05  39.9%
-Combinational          1.16e-05   8.83e-06   2.21e-08   2.04e-05  60.1%
-Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Sequential             1.34e-05   9.00e-07   7.15e-09   1.43e-05  32.9%
+Combinational          1.38e-05   1.02e-05   2.66e-08   2.40e-05  55.2%
+Clock                  2.43e-06   2.76e-06   4.02e-10   5.19e-06  11.9%
 Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 ----------------------------------------------------------------
-Total                  2.42e-05   9.73e-06   2.76e-08   3.40e-05 100.0%
-                          71.3%      28.6%       0.1%
+Total                  2.96e-05   1.39e-05   3.41e-08   4.35e-05 100.0%
+                          68.0%      31.9%       0.1%
 ```
 
 ## Peak power analysis workflow

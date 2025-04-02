@@ -52,31 +52,12 @@ jobs:
         run: |
           tuttest README.md build-verilator | bash -
 
-      - name: Fetch CUDD
-        run: git clone https://github.com/davidkebo/cudd
-
-      - name: Build CUDD
-        run: |
-          tuttest README.md build-cudd | bash -
-
-      - name: Fetch OpenSTA
-        run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
-
-      - name: Build OpenSTA
-        run: |
-          export CUDD_INSTALL_DIR=$(pwd)/cudd/cudd_versions/cudd-3.0.0
-
-          tuttest README.md build-open-sta | bash -
-
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
       - name: Build OpenROAD
         run: |
-          cd OpenROAD-flow-scripts
-          git submodule update --init --recursive tools/yosys tools/OpenROAD
-          ./tools/OpenROAD/etc/DependencyInstaller.sh -common
-          ./build_openroad.sh -t $(nproc) --local
+          tuttest README.md build-openroad | bash -
 
       - name: Fetch asap7 sources
         run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
@@ -91,8 +72,7 @@ jobs:
 
       - name: Run place and route
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
+          tuttest README.md run-place-and-route | bash -
 
       - name: Copy synthesized model to example directory
         run: |
@@ -139,31 +119,12 @@ jobs:
         run: |
           tuttest README.md build-verilator | bash -
 
-      - name: Fetch CUDD
-        run: git clone https://github.com/davidkebo/cudd
-
-      - name: Build CUDD
-        run: |
-          tuttest README.md build-cudd | bash -
-
-      - name: Fetch OpenSTA
-        run: git clone https://github.com/The-OpenROAD-Project/OpenSTA
-
-      - name: Build OpenSTA
-        run: |
-          export CUDD_INSTALL_DIR=$(pwd)/cudd/cudd_versions/cudd-3.0.0
-
-          tuttest README.md build-open-sta | bash -
-
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
       - name: Build OpenROAD
         run: |
-          cd OpenROAD-flow-scripts
-          git submodule update --init --recursive tools/yosys tools/OpenROAD
-          ./tools/OpenROAD/etc/DependencyInstaller.sh -common
-          ./build_openroad.sh -t $(nproc) --local
+          tuttest README.md build-openroad | bash -
 
       - name: Fetch trace2power
         run: git clone https://github.com/antmicro/trace2power -b "72335-peak-power-analysis"
@@ -187,8 +148,7 @@ jobs:
 
       - name: Run place and route
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
+          tuttest README.md run-place-and-route | bash -
 
       - name: Copy synthesized model to example directory
         run: |
