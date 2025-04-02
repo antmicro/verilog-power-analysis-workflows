@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
@@ -71,9 +71,12 @@ jobs:
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
-      - name: Build Yosys
+      - name: Build OpenROAD
         run: |
-          tuttest README.md build-yosys | bash -
+          cd OpenROAD-flow-scripts
+          git submodule update --init --recursive tools/yosys tools/OpenROAD
+          ./tools/OpenROAD/etc/DependencyInstaller.sh -common
+          ./build_openroad.sh -t $(nproc) --local
 
       - name: Fetch asap7 sources
         run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
@@ -85,6 +88,11 @@ jobs:
       - name: Run Yosys synthesis
         run: |
           tuttest README.md run-yosys-synthesis | bash -
+
+      - name: Run place and route
+        run: |
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
 
       - name: Copy synthesized model to example directory
         run: |
@@ -98,7 +106,7 @@ jobs:
 
       - name: Generate power consumption report
         run: |
-          export PATH=$PATH:$(pwd)/OpenSTA/app/
+          export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
           tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
 
@@ -150,9 +158,12 @@ jobs:
       - name: Fetch OpenROAD-flow-scripts
         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
-      - name: Build Yosys
+      - name: Build OpenROAD
         run: |
-          tuttest README.md build-yosys | bash -
+          cd OpenROAD-flow-scripts
+          git submodule update --init --recursive tools/yosys tools/OpenROAD
+          ./tools/OpenROAD/etc/DependencyInstaller.sh -common
+          ./build_openroad.sh -t $(nproc) --local
 
       - name: Fetch trace2power
         run: git clone https://github.com/antmicro/trace2power -b "72335-peak-power-analysis"
@@ -174,6 +185,11 @@ jobs:
         run: |
           tuttest README.md run-yosys-synthesis | bash -
 
+      - name: Run place and route
+        run: |
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
+
       - name: Copy synthesized model to example directory
         run: |
           cp OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v peak_power_example/gcd.v
@@ -192,7 +208,7 @@ jobs:
       
       - name: Generate peak power report
         run: |
-          export PATH=$PATH:$(pwd)/OpenSTA/app/
+          export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
           tuttest README.md copy-required-peak-power-artifacts,export-liberty-path,execute-peak-power-script | bash -
 

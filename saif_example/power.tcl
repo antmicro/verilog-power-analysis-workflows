@@ -4,11 +4,9 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
-read_verilog 1_synth.v
-link_design gcd
+read_db 6_final.odb
 
 read_sdc 1_synth.sdc
 
 read_saif -scope gcd_tb/gcd simx.saif
 report_power
-exit

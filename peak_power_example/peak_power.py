@@ -44,13 +44,36 @@ parser.add_argument('--input_dir', action='store', help='Path to directory with 
 parser.set_defaults(stop=True)
 args = parser.parse_args()
 
-open_sta_command = 'sta'
-open_sta_script = 'power.tcl'
-input_trace_file = 'input_trace'
-power_report_file = 'output_power'
+open_road_command = 'openroad'
+open_road_script = 'power.tcl'
+result_directory = 'result'
 
 files = os.listdir(args.input_dir)
 files = sorted(files)
+
+tcl_script = """
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
+
+read_db 6_final.odb
+
+read_sdc 1_synth.sdc
+"""
+
+for file in files:
+    tcl_script += f"""
+source {args.input_dir + file}
+set_pin_activity_and_duty
+report_power > result/{file}
+"""
+    
+with open(open_road_script, 'w') as file:
+    file.write(tcl_script)
+
+subprocess.run([open_road_command, "-exit", open_road_script], capture_output=True, text=True)
 
 power_results = []
 clock_cycles_indices = []
@@ -58,19 +81,19 @@ clock_cycles_indices = []
 peak_power = 0
 peak_power_clock_cycle = 0
 
+result_files = os.listdir(result_directory)
+result_files = sorted(result_files)
+
 current_clock_cycle = 0
-for file in files:
+for file in result_files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle #{current_clock_cycle}')
-    os.symlink(args.input_dir + "/" + file, input_trace_file)
-    subprocess.run([open_sta_command, "-exit", open_sta_script], capture_output=True, text=True)
-    report_contents = read_from_file(power_report_file)
+    report_contents = read_from_file(result_directory + "/" + file)
     total_power = search_for_total_power(report_contents)
     if (total_power > peak_power):
         peak_power = total_power
         peak_power_clock_cycle = current_clock_cycle
     power_results.append(total_power)
-    os.remove(input_trace_file)
     current_clock_cycle += 1
 
 plt.plot(clock_cycles_indices, power_results, marker='o', linestyle='-', color='g')

@@ -144,7 +144,7 @@ Go to the synthesis results directory and then run `sta` with commands:
 <!-- name="execute-sta-commands" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-sta power.tcl
+openroad power.tcl -exit
 ```
 
 or you can just execute them manually after running `sta` in the synthesis results directory:
