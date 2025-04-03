@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     name: Static power verilator flow | ${{ matrix.os }}
     env:
@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
@@ -88,13 +88,13 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
-          tuttest README.md copy-required-artifacts,export-liberty-path,execute-sta-commands | bash -
+          tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
 
   peak-power-analysis:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     name: Peak power analysis flow | ${{ matrix.os }}
     env:
@@ -108,7 +108,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl
+          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
@@ -160,11 +160,11 @@ jobs:
 
           tuttest README.md generate-vcd-file | bash -
 
-      - name: Process VCD with trace2power
+      - name: Process total power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-vcd-output | bash -
+          tuttest README.md process-total-output | bash -
       
       - name: Generate peak power report
         run: |

@@ -39,7 +39,7 @@ cd OpenROAD-flow-scripts
 
 git submodule update --init --recursive tools/yosys tools/OpenROAD
 sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
-./build_openroad.sh -t $(nproc) --local
+./build_openroad.sh -t $(nproc) --local --openroad-args "no-gui"
 
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
@@ -123,6 +123,7 @@ Go to the synthesis results directory and then run `openroad` with commands:
 <!-- name="execute-openroad-commands" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+ls
 openroad power.tcl -exit
 ```
 
@@ -135,7 +136,7 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
-read_verilog 6_final.odb
+read_db 6_final.odb
 
 read_sdc 1_synth.sdc
 
@@ -160,7 +161,7 @@ Total                  2.96e-05   1.39e-05   3.41e-08   4.35e-05 100.0%
                           68.0%      31.9%       0.1%
 ```
 
-## Peak power analysis workflow
+## Peak and glitch power analysis workflow
 
 ### Generating VCD file from trace
 
@@ -177,15 +178,15 @@ verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_S
 
 This will generate the `simx.vcd` file in the current directory with the VCD trace output.
 
-### Processing VCD file to per clock cycle TCL scripts
+### Processing VCD file to total power per clock cycle TCL scripts
 
 To generate per clock cycle TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
 
-<!-- name="process-vcd-output" -->
+<!-- name="process-total-vcd-output" -->
 ```
 cd peak_power_example/
-mkdir -p output
-trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output output simx.vcd
+mkdir -p total_output
+trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output total_output simx.vcd
 ```
 
 ### Generating peak power report
@@ -194,9 +195,8 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
-cp -r peak_power_example/output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp peak_power_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
@@ -211,7 +211,8 @@ Go to the synthesis results directory and then run the peak power script:
 <!-- name="execute-peak-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-python3 peak_power.py --input_dir output
+mkdir -p result
+python3 peak_power.py --input total_output
 ```
 
 This will visualize power consumption over time and output maximum encountered value:
