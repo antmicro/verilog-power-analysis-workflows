@@ -38,7 +38,7 @@ Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PA
 cd OpenROAD-flow-scripts
 
 git submodule update --init --recursive tools/yosys tools/OpenROAD
-./tools/OpenROAD/etc/DependencyInstaller.sh -common
+sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 ./build_openroad.sh -t $(nproc) --local
 
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
