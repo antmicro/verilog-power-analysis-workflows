@@ -39,7 +39,7 @@ cd OpenROAD-flow-scripts
 
 git submodule update --init --recursive tools/yosys tools/OpenROAD
 sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
-./build_openroad.sh -t $(nproc) --local --openroad-args "no-gui"
+./build_openroad.sh -t $(nproc) --local
 
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
@@ -213,6 +213,58 @@ Go to the synthesis results directory and then run the peak power script:
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 mkdir -p result
 python3 peak_power.py --input total_output
+```
+
+This will visualize power consumption over time and output maximum encountered value:
+
+```
+...
+Processing clock cycle #23
+Processing clock cycle #24
+Processing clock cycle #25
+Processing clock cycle #26
+Processing clock cycle #27
+Processing clock cycle #28
+Processing clock cycle #29
+Maximum power consumption of a single clock cycle is 0.000205 Watts and occurred in clock cycle #0
+```
+
+### Processing VCD file to glitch power per clock cycle TCL scripts
+
+To generate per clock cycle glitch TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
+
+<!-- name="process-vcd-output-with-glitches" -->
+```
+cd peak_power_example/
+mkdir -p glitch_output
+trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --only-glitches --output glitch_output simx.vcd
+```
+
+### Generating peak power with glitches report
+
+Copy previously generated TCL files with required scripts to the synthesis result directory:
+
+<!-- name="copy-required-glitch-power-artifacts" -->
+```
+cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+```
+
+For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
+
+<!-- name="export-liberty-path" -->
+```
+export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+```
+
+Go to the synthesis results directory and then run the glitch power script:
+
+<!-- name="execute-glitch-power-script" -->
+```
+cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+mkdir -p total_result glitch_result
+python3 peak_power.py --total total_output --glitch glitch_output
 ```
 
 This will visualize power consumption over time and output maximum encountered value:

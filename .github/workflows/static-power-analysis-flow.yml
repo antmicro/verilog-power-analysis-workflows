@@ -127,7 +127,7 @@ jobs:
           tuttest README.md build-openroad | bash -
 
       - name: Fetch trace2power
-        run: git clone https://github.com/antmicro/trace2power -b "72335-peak-power-analysis"
+        run: git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
 
       - name: Build trace2power
         run: |
@@ -176,4 +176,99 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power analysis report
+          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/report.png
+
+  glitch-power-analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    name: Peak power analysis flow | ${{ matrix.os }}
+    env:
+      CI_BUILD_STAGE_NAME: build
+      CI_RUNS_ON: ${{ matrix.os }}
+      CACHE_BASE_KEY: build-${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-12 gcc make flex bison help2man perl python3 libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+      - name: Fetch Verilator
+        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
+
+      - name: Build Verilator
+        run: |
+          tuttest README.md build-verilator | bash -
+
+      - name: Fetch OpenROAD-flow-scripts
+        run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+
+      - name: Build OpenROAD
+        run: |
+          tuttest README.md build-openroad | bash -
+
+      - name: Fetch trace2power
+        run: git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
+
+      - name: Build trace2power
+        run: |
+          source $HOME/.cargo/env
+
+          tuttest README.md build-trace-to-power | bash -
+
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28.git
+
+      - name: Prepare sources for Yosys synthesis
+        run: |
+          tuttest README.md copy-model-sources | bash -
+
+      - name: Run Yosys synthesis
+        run: |
+          tuttest README.md run-yosys-synthesis | bash -
+
+      - name: Run place and route
+        run: |
+          tuttest README.md run-place-and-route | bash -
+
+      - name: Copy synthesized model to example directory
+        run: |
+          cp OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v peak_power_example/gcd.v
+
+      - name: Generate VCD file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+
+          tuttest README.md generate-vcd-file | bash -
+          cp peak_power_example/simx.vcd glitch_power_example/
+
+      - name: Process total power from VCD with trace2power
+        run: |
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
+
+          tuttest README.md process-total-output | bash -
+
+      - name: Process glitch power from VCD with trace2power
+        run: |
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
+
+          tuttest README.md process-vcd-output-with-glitches | bash -
+      
+      - name: Generate peak power with glitches report
+        run: |
+          export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+
+          tuttest README.md copy-required-glitch-power-artifacts,export-liberty-path,execute-glitch-power-script | bash -
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: peak power with glitches analysis report
           path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/report.png
