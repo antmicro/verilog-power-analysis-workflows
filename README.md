@@ -212,7 +212,7 @@ Go to the synthesis results directory and then run the peak power script:
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 mkdir -p result
-python3 peak_power.py --input total_output
+python3 peak_power.py --total total_output
 ```
 
 This will visualize power consumption over time and output maximum encountered value:

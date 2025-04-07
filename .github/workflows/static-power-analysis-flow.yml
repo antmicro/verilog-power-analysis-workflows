@@ -164,7 +164,7 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-total-output | bash -
+          tuttest README.md process-total-vcd-output | bash -
       
       - name: Generate peak power report
         run: |
