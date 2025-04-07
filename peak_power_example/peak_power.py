@@ -69,7 +69,7 @@ for file in total_power_files:
     tcl_script += f"""
 source {args.total + file}
 set_pin_activity_and_duty
-report_power > total_power_result/{file}
+report_power > total_result/{file}
 """
 
 glitch_power_files = os.listdir(args.glitch)
@@ -79,13 +79,13 @@ for file in glitch_power_files:
     tcl_script += f"""
 source {args.glitch + file}
 set_pin_activity_and_duty
-report_power > glitch_power_result/{file}
+report_power > glitch_result/{file}
 """
     
 with open(open_road_script, 'w') as file:
     file.write(tcl_script)
 
-subprocess.run([open_road_command, "-exit", open_road_script], capture_output=True, text=True)
+subprocess.run([open_road_command, "-exit", open_road_script], capture_output=False, text=True)
 
 total_power_results = []
 clock_cycles_indices = []
