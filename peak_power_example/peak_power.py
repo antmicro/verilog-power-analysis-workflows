@@ -67,7 +67,7 @@ total_power_files = sorted(total_power_files)
 
 for file in total_power_files:
     tcl_script += f"""
-source {args.input_dir + file}
+source {args.total + file}
 set_pin_activity_and_duty
 report_power > total_power_result/{file}
 """
