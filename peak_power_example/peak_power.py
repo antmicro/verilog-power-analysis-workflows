@@ -67,20 +67,21 @@ total_power_files = sorted(total_power_files)
 
 for file in total_power_files:
     tcl_script += f"""
-source {args.total + file}
+source {os.path.join(args.total, file)}
 set_pin_activity_and_duty
-report_power > total_result/{file}
+report_power > {os.path.join(total_power_result_directory, file)}
 """
 
-glitch_power_files = os.listdir(args.glitch)
-glitch_power_files = sorted(glitch_power_files)
-    
-for file in glitch_power_files:
-    tcl_script += f"""
-source {args.glitch + file}
-set_pin_activity_and_duty
-report_power > glitch_result/{file}
-"""
+if args.glitch:
+    glitch_power_files = os.listdir(args.glitch)
+    glitch_power_files = sorted(glitch_power_files)
+        
+    for file in glitch_power_files:
+        tcl_script += f"""
+    source {os.path.join(args.glitch, file)}
+    set_pin_activity_and_duty
+    report_power > {os.path.join(glitch_power_result_directory, file)}
+    """
     
 with open(open_road_script, 'w') as file:
     file.write(tcl_script)
@@ -100,7 +101,7 @@ current_clock_cycle = 0
 for file in total_power_result_files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle #{current_clock_cycle}')
-    report_contents = read_from_file(total_power_result_directory + "/" + file)
+    report_contents = read_from_file(os.path.join(total_power_result_directory, file))
     total_power = search_for_total_power(report_contents)
     if (total_power > peak_power):
         peak_power = total_power
@@ -108,21 +109,23 @@ for file in total_power_result_files:
     total_power_results.append(total_power)
     current_clock_cycle += 1
 
-glitch_power_results = []
-
-glitch_power_result_files = os.listdir(glitch_power_result_directory)
-glitch_power_result_files = sorted(glitch_power_result_files)
-
-current_clock_cycle = 0
-for file in glitch_power_result_files:
-    print(f'Processing clock cycle #{current_clock_cycle}')
-    report_contents = read_from_file(glitch_power_result_directory + "/" + file)
-    glitch_power = search_for_total_power(report_contents)
-    glitch_power_results.append(total_power)
-    current_clock_cycle += 1
-
 plt.plot(clock_cycles_indices, total_power_results, marker='o', linestyle='-', color='g')
-plt.plot(clock_cycles_indices, glitch_power_results, marker='o', linestyle='-', color='r')
+
+if args.glitch:
+    glitch_power_results = []
+
+    glitch_power_result_files = os.listdir(glitch_power_result_directory)
+    glitch_power_result_files = sorted(glitch_power_result_files)
+
+    current_clock_cycle = 0
+    for file in glitch_power_result_files:
+        print(f'Processing clock cycle #{current_clock_cycle}')
+        report_contents = read_from_file(os.path.join(glitch_power_result_directory, file))
+        glitch_power = search_for_total_power(report_contents)
+        glitch_power_results.append(total_power)
+        current_clock_cycle += 1
+
+    plt.plot(clock_cycles_indices, glitch_power_results, marker='o', linestyle='-', color='r')
 
 plt.title("Power consumption over time")
 plt.xlabel("Clock cycle")

@@ -178,9 +178,9 @@ verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_S
 
 This will generate the `simx.vcd` file in the current directory with the VCD trace output.
 
-### Processing VCD file to total power per clock cycle TCL scripts
+### Processing VCD file to per clock cycle total power TCL scripts
 
-To generate per clock cycle TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
+To generate per clock cycle total power TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
 
 <!-- name="process-total-vcd-output" -->
 ```
@@ -229,7 +229,7 @@ Processing clock cycle #29
 Maximum power consumption of a single clock cycle is 0.000205 Watts and occurred in clock cycle #0
 ```
 
-### Processing VCD file to glitch power per clock cycle TCL scripts
+### Processing VCD file to per clock cycle glitch power TCL scripts
 
 To generate per clock cycle glitch TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
 
@@ -237,7 +237,7 @@ To generate per clock cycle glitch TCL scripts, which will be used to generate p
 ```
 cd peak_power_example/
 mkdir -p glitch_output
-trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --only-glitches --output glitch_output simx.vcd
+trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output simx.vcd
 ```
 
 ### Generating peak power with glitches report
@@ -267,7 +267,7 @@ mkdir -p total_result glitch_result
 python3 peak_power.py --total total_output --glitch glitch_output
 ```
 
-This will visualize power consumption over time and output maximum encountered value:
+This will visualize power consumption over time with per clock cycle total/glitch power and output maximum encountered value:
 
 ```
 ...

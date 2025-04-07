@@ -184,7 +184,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
-    name: Peak power analysis flow | ${{ matrix.os }}
+    name: Peak and glitch power analysis flow | ${{ matrix.os }}
     env:
       CI_BUILD_STAGE_NAME: build
       CI_RUNS_ON: ${{ matrix.os }}
@@ -253,7 +253,7 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-total-output | bash -
+          tuttest README.md process-total-vcd-output | bash -
 
       - name: Process glitch power from VCD with trace2power
         run: |
