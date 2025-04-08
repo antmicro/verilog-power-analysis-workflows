@@ -90,6 +90,12 @@ jobs:
 
           tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: static power analysis report
+          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+
   peak-power-analysis:
     strategy:
       fail-fast: false
@@ -176,7 +182,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power analysis report
-          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/report.png
+          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 
   glitch-power-analysis:
     strategy:
@@ -271,4 +277,4 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power with glitches analysis report
-          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/report.png
+          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
