@@ -136,7 +136,7 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
-read_db 6_final.odb
+read_db 5_route.odb
 
 read_sdc 1_synth.sdc
 
@@ -151,14 +151,14 @@ Annotated 159 pin activities.
 Group                  Internal  Switching    Leakage      Total
                           Power      Power      Power      Power (Watts)
 ----------------------------------------------------------------
-Sequential             1.34e-05   9.00e-07   7.15e-09   1.43e-05  32.9%
-Combinational          1.38e-05   1.02e-05   2.66e-08   2.40e-05  55.2%
-Clock                  2.43e-06   2.76e-06   4.02e-10   5.19e-06  11.9%
+Sequential             1.32e-05   1.04e-06   6.97e-09   1.42e-05  31.3%
+Combinational          1.63e-05   9.74e-06   2.97e-08   2.60e-05  57.3%
+Clock                  2.43e-06   2.76e-06   4.02e-10   5.19e-06  11.4%
 Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 ----------------------------------------------------------------
-Total                  2.96e-05   1.39e-05   3.41e-08   4.35e-05 100.0%
-                          68.0%      31.9%       0.1%
+Total                  3.18e-05   1.35e-05   3.70e-08   4.54e-05 100.0%
+                          70.1%      29.8%       0.1%
 ```
 
 ## Peak and glitch power analysis workflow
@@ -226,7 +226,7 @@ Processing clock cycle #26
 Processing clock cycle #27
 Processing clock cycle #28
 Processing clock cycle #29
-Maximum power consumption of a single clock cycle is 0.000205 Watts and occurred in clock cycle #0
+Maximum power consumption of a single clock cycle is 0.000278 Watts and occurred in clock cycle #0
 ```
 
 ### Processing VCD file to per clock cycle glitch power TCL scripts
@@ -278,5 +278,5 @@ Processing clock cycle #26
 Processing clock cycle #27
 Processing clock cycle #28
 Processing clock cycle #29
-Maximum power consumption of a single clock cycle is 0.000205 Watts and occurred in clock cycle #0
+Maximum power consumption of a single clock cycle is 0.000278 Watts and occurred in clock cycle #0
 ```
