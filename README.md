@@ -211,7 +211,7 @@ Go to the synthesis results directory and then run the peak power script:
 <!-- name="execute-peak-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-mkdir -p result
+mkdir -p total_result
 python3 peak_power.py --total total_output
 ```
 
