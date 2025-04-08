@@ -86,7 +86,7 @@ if args.glitch:
 with open(open_road_script, 'w') as file:
     file.write(tcl_script)
 
-subprocess.run([open_road_command, "-exit", open_road_script], capture_output=False, text=True)
+subprocess.run([open_road_command, "-exit", open_road_script], capture_output=True, text=True)
 
 total_power_results = []
 clock_cycles_indices = []
