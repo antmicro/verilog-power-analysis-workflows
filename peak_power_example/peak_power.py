@@ -122,7 +122,7 @@ if args.glitch:
         print(f'Processing clock cycle #{current_clock_cycle}')
         report_contents = read_from_file(os.path.join(glitch_power_result_directory, file))
         glitch_power = search_for_total_power(report_contents)
-        glitch_power_results.append(total_power)
+        glitch_power_results.append(glitch_power)
         current_clock_cycle += 1
 
     plt.plot(clock_cycles_indices, glitch_power_results, marker='o', linestyle='-', color='r')
