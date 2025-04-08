@@ -253,7 +253,6 @@ jobs:
           export PATH=$PATH:$(pwd)/verilator/bin/
 
           tuttest README.md generate-vcd-file | bash -
-          cp peak_power_example/simx.vcd glitch_power_example/
 
       - name: Process total power from VCD with trace2power
         run: |
