@@ -107,8 +107,8 @@ Copy previously generated SAIF file from simulation trace and `power.tcl` comman
 
 <!-- name="copy-required-artifacts" -->
 ```
-cp saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp saif_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp saif_example/simx.saif OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp saif_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
@@ -122,8 +122,7 @@ Go to the synthesis results directory and then run `openroad` with commands:
 
 <!-- name="execute-openroad-commands" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-ls
+cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 openroad power.tcl -exit
 ```
 

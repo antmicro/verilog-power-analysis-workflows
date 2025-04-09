@@ -8,5 +8,5 @@ read_db 5_route.odb
 
 read_sdc 1_synth.sdc
 
-read_saif -scope gcd_tb/gcd simx.saif
+read_saif -scope ibex_tb/ibex_core simx.saif
 report_power

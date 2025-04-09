@@ -62,10 +62,6 @@ jobs:
       - name: Fetch asap7 sources
         run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
 
-      - name: Prepare sources for Yosys synthesis
-        run: |
-          tuttest README.md copy-model-sources | bash -
-
       - name: Run synthesis
         run: |
           cd OpenROAD-flow-scripts
@@ -75,17 +71,21 @@ jobs:
         run: |
           cp OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v saif_example/ibex.v
 
-      # - name: Generate SAIF file from simulation trace
-      #   run: |
-      #     export PATH=$PATH:$(pwd)/verilator/bin/
+      - name: Generate SAIF file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+          
+          export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
 
-      #     tuttest README.md generate-saif-file | bash -
+          cd saif_example/
+          verilator --cc --exe --build --trace-saif -j -Wno-fatal -I$MODEL_SOURCES ibex.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
+          ./obj_dir/Vibex
 
-      # - name: Generate power consumption report
-      #   run: |
-      #     export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+      - name: Generate power consumption report
+        run: |
+          export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
-      #     tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
+          tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4.3.3
