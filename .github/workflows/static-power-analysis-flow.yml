@@ -46,7 +46,7 @@ jobs:
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
+        run: git clone https://github.com/antmicro/verilator
 
       - name: Build Verilator
         run: |
@@ -119,7 +119,7 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
+        run: git clone https://github.com/antmicro/verilator
 
       - name: Build Verilator
         run: |
@@ -207,7 +207,7 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator -b "mgan/saif-escaping"
+        run: git clone https://github.com/antmicro/verilator
 
       - name: Build Verilator
         run: |
