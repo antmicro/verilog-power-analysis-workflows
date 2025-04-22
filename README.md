@@ -178,6 +178,16 @@ verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_S
 
 This will generate the `simx.vcd` file in the current directory with the VCD trace output.
 
+### Processing VCD file to base per clock cycle power TCL scripts
+
+To generate base per clock cycle power TCL scripts, which will be used to offset generated total and peak power consumption reports, use `trace2power` to process previously generated VCD file:
+
+<!-- name="process-empty-vcd-output" -->
+```
+cd peak_power_example/
+trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
+```
+
 ### Processing VCD file to per clock cycle total power TCL scripts
 
 To generate per clock cycle total power TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
@@ -195,6 +205,7 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
+cp -r peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 ```
@@ -212,7 +223,7 @@ Go to the synthesis results directory and then run the peak power script:
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 mkdir -p total_result
-python3 peak_power.py --total total_output
+python3 peak_power.py --base base_output --total total_output
 ```
 
 This will visualize power consumption over time and output maximum encountered value:
@@ -246,6 +257,7 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
+cp -r peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
@@ -264,7 +276,7 @@ Go to the synthesis results directory and then run the glitch power script:
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 mkdir -p total_result glitch_result
-python3 peak_power.py --total total_output --glitch glitch_output
+python3 peak_power.py --base base_output --total total_output --glitch glitch_output
 ```
 
 This will visualize power consumption over time with per clock cycle total/glitch power and output maximum encountered value:

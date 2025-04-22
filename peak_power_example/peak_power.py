@@ -40,6 +40,7 @@ parser = argparse.ArgumentParser(
     allow_abbrev=False,
     formatter_class=argparse.RawDescriptionHelpFormatter,
     description="""""")
+parser.add_argument('--base', action='store', help='Path to file with base power report')
 parser.add_argument('--total', action='store', help='Path to directory with total report for each clock cycle from simulation')
 parser.add_argument('--glitch', action='store', help='Path to directory with glitch report for each clock cycle from simulation')
 parser.set_defaults(stop=True)
@@ -47,10 +48,11 @@ args = parser.parse_args()
 
 open_road_command = 'openroad'
 open_road_script = 'power.tcl'
+base_power_result_path = 'base_result'
 total_power_result_directory = 'total_result'
 glitch_power_result_directory = 'glitch_result'
 
-tcl_script = """
+tcl_script = f"""
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
@@ -60,6 +62,10 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 read_db 5_route.odb
 
 read_sdc 1_synth.sdc
+
+source {args.base}
+set_pin_activity_and_duty
+report_power > {base_power_result_path}
 """
 
 total_power_files = os.listdir(args.total)
@@ -88,6 +94,9 @@ with open(open_road_script, 'w') as file:
 
 subprocess.run([open_road_command, "-exit", open_road_script], capture_output=True, text=True)
 
+base_report_contents = read_from_file(base_power_result_path)
+base_power = search_for_total_power(base_report_contents)
+
 total_power_results = []
 clock_cycles_indices = []
 
@@ -102,7 +111,7 @@ for file in total_power_result_files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle #{current_clock_cycle}')
     report_contents = read_from_file(os.path.join(total_power_result_directory, file))
-    total_power = search_for_total_power(report_contents)
+    total_power = search_for_total_power(report_contents) - base_power
     if (total_power > peak_power):
         peak_power = total_power
         peak_power_clock_cycle = current_clock_cycle
@@ -121,7 +130,7 @@ if args.glitch:
     for file in glitch_power_result_files:
         print(f'Processing clock cycle #{current_clock_cycle}')
         report_contents = read_from_file(os.path.join(glitch_power_result_directory, file))
-        glitch_power = search_for_total_power(report_contents)
+        glitch_power = search_for_total_power(report_contents) - base_power
         glitch_power_results.append(glitch_power)
         current_clock_cycle += 1
 
