@@ -168,7 +168,7 @@ jobs:
 
       - name: Process base power from VCD with trace2power
         run: |
-          export PATH=$PATH:$(pwd)/verilator/bin/
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
 
           tuttest README.md process-empty-vcd-output | bash -
 
@@ -262,7 +262,7 @@ jobs:
 
       - name: Process base power from VCD with trace2power
         run: |
-          export PATH=$PATH:$(pwd)/verilator/bin/
+          export PATH=$PATH:$(pwd)/trace2power/target/release/
 
           tuttest README.md process-empty-vcd-output | bash -
 
