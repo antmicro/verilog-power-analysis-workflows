@@ -323,13 +323,13 @@ module ibex_simple_system (
   export "DPI-C" function mhpmcounter_num;
 
   function automatic int unsigned mhpmcounter_num();
-    return u_top.u_ibex_top.u_ibex_core.cs_registers_i.MHPMCounterNum;
+    return 0;
   endfunction
 
   export "DPI-C" function mhpmcounter_get;
 
   function automatic longint unsigned mhpmcounter_get(int index);
-    return u_top.u_ibex_top.u_ibex_core.cs_registers_i.mhpmcounter[index];
+    return 0;
   endfunction
 
 endmodule
