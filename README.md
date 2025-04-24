@@ -205,7 +205,7 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
-cp -r peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 ```
@@ -257,7 +257,7 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
-cp -r peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/

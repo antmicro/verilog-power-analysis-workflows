@@ -171,6 +171,7 @@ jobs:
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
           tuttest README.md process-empty-vcd-output | bash -
+          cat peak_power_example/base_output
 
       - name: Process total power from VCD with trace2power
         run: |
@@ -265,6 +266,7 @@ jobs:
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
           tuttest README.md process-empty-vcd-output | bash -
+          cat peak_power_example/base_output
 
       - name: Process total power from VCD with trace2power
         run: |
