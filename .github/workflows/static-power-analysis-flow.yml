@@ -94,7 +94,9 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: static power analysis report
-          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          path: |
+            OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+            saif_example/simx.saif
 
   peak-power-analysis:
     strategy:
@@ -189,7 +191,9 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power analysis report
-          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          path: |
+            OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+            peak_power_example/simx.vcd
 
   glitch-power-analysis:
     strategy:
@@ -290,4 +294,6 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power with glitches analysis report
-          path: OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+          path: |
+            OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+            peak_power_example/simx.vcd
