@@ -597,7 +597,5 @@ module ibex_controller (
 			illegal_insn_q <= illegal_insn_d;
 		end
 	end
-	wire rvfi_flush_next;
-	assign rvfi_flush_next = ctrl_fsm_ns == 4'd6;
 	initial _sv2v_0 = 0;
 endmodule

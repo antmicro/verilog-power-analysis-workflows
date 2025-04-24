@@ -264,7 +264,7 @@ module ibex_load_store_unit (
 		if (MemECC) begin : g_mem_rdata_ecc
 			wire [1:0] ecc_err;
 			wire [MemDataWidth - 1:0] data_rdata_buf;
-			prim_buf #(.Width(MemDataWidth)) u_prim_buf_instr_rdata(
+			prim_generic_buf #(.Width(MemDataWidth)) u_prim_generic_buf_instr_rdata(
 				.in_i(data_rdata_i),
 				.out_o(data_rdata_buf)
 			);

@@ -231,7 +231,7 @@ module ibex_if_stage (
 		if (MemECC) begin : g_mem_ecc
 			wire [1:0] ecc_err;
 			wire [MemDataWidth - 1:0] instr_rdata_buf;
-			prim_buf #(.Width(MemDataWidth)) u_prim_buf_instr_rdata(
+			prim_generic_buf #(.Width(MemDataWidth)) u_prim_generic_buf_instr_rdata(
 				.in_i(instr_rdata_i),
 				.out_o(instr_rdata_buf)
 			);
@@ -467,7 +467,7 @@ module ibex_if_stage (
 				else
 					prev_instr_seq_q <= prev_instr_seq_d;
 			assign prev_instr_addr_incr = pc_id_o + (instr_is_compressed_id_o ? 32'd2 : 32'd4);
-			prim_buf #(.Width(32)) u_prev_instr_addr_incr_buf(
+			prim_generic_buf #(.Width(32)) u_prev_instr_addr_incr_buf(
 				.in_i(prev_instr_addr_incr),
 				.out_o(prev_instr_addr_incr_buf)
 			);
