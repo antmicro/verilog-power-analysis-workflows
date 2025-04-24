@@ -121,7 +121,7 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator
+        run: git clone https://github.com/antmicro/verilator -b "mgan/workflows"
 
       - name: Build Verilator
         run: |
@@ -135,7 +135,9 @@ jobs:
           tuttest README.md build-openroad | bash -
 
       - name: Fetch trace2power
-        run: git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
+        run: |
+          git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
+          cd trace2power && git status
 
       - name: Build trace2power
         run: |
@@ -172,8 +174,9 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-empty-vcd-output | bash -
-          cat peak_power_example/base_output
+          cd peak_power_example/
+          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
+          cat base_output
 
       - name: Process total power from VCD with trace2power
         run: |
@@ -232,7 +235,9 @@ jobs:
           tuttest README.md build-openroad | bash -
 
       - name: Fetch trace2power
-        run: git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
+        run: |
+          git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
+          cd trace2power && git status
 
       - name: Build trace2power
         run: |
@@ -269,8 +274,9 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-empty-vcd-output | bash -
-          cat peak_power_example/base_output
+          cd peak_power_example/
+          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
+          cat base_output
 
       - name: Process total power from VCD with trace2power
         run: |
