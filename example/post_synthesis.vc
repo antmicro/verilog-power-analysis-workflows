@@ -140,8 +140,6 @@ prim_mubi32_sender.sv
 prim_mubi32_sync.sv
 prim_mubi32_dec.sv
 verilog/ibex_core/ibex_alu.v
-verilog/ibex_core/ibex_branch_predict.v
-verilog/ibex_core/ibex_compressed_decoder.v
 verilog/ibex_core/ibex_controller.v
 verilog/ibex_core/ibex_core.v
 verilog/ibex_core/ibex_counter.v
@@ -150,14 +148,12 @@ verilog/ibex_core/ibex_csr.v
 verilog/ibex_core/ibex_decoder.v
 verilog/ibex_core/ibex_dummy_instr.v
 verilog/ibex_core/ibex_ex_block.v
-verilog/ibex_core/ibex_fetch_fifo.v
 verilog/ibex_core/ibex_id_stage.v
 verilog/ibex_core/ibex_if_stage_synth.v
 verilog/ibex_core/ibex_load_store_unit.v
 verilog/ibex_core/ibex_multdiv_fast.v
 verilog/ibex_core/ibex_multdiv_slow.v
 verilog/ibex_core/ibex_pmp.v
-verilog/ibex_core/ibex_prefetch_buffer.v
 verilog/ibex_core/ibex_wb_stage.v
 ram_1p.sv
 ram_2p.sv
