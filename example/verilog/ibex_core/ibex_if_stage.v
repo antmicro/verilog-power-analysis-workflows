@@ -51,7 +51,7 @@ module ibex_if_stage (
 	localparam [31:0] ibex_pkg_IC_TAG_SIZE = ((ibex_pkg_ADDR_W - ibex_pkg_IC_INDEX_W) - ibex_pkg_IC_LINE_W) + 1;
 	parameter [31:0] TagSizeECC = ibex_pkg_IC_TAG_SIZE;
 	parameter [31:0] LineSizeECC = ibex_pkg_IC_LINE_SIZE;
-	parameter [0:0] ResetAll = 1'b0;
+	parameter [0:0] ResetAll = 1'b1;
 	localparam [31:0] ibex_pkg_RndCnstLfsrSeedDefault = 32'hac533bf4;
 	localparam [159:0] ibex_pkg_RndCnstLfsrPermDefault = 160'h1e35ecba467fd1b12e958152c04fa43878a8daed;
 	parameter [0:0] BranchPredictor = 1'b0;
@@ -185,12 +185,10 @@ module ibex_if_stage (
 	assign instr_is_compressed_out = instr_is_compressed;
 	assign instr_valid_id_d = ((if_instr_valid & id_in_ready_i) & ~pc_set_i) | (instr_valid_id_q & ~instr_valid_clear_i);
 	assign instr_new_id_d = if_instr_valid & id_in_ready_i;
-	always @(posedge clk_i or negedge rst_ni)
-		if (!rst_ni) begin
-		end
-		else begin
-			instr_valid_id_q <= instr_valid_id_d;
-		end
+	
+	always @(posedge clk_i)
+		instr_valid_id_q <= instr_valid_id_d;
+
 	assign instr_valid_id_o = instr_valid_id_q;
 	assign if_id_pipe_reg_we = instr_new_id_d;
 	

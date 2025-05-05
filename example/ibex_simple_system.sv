@@ -117,8 +117,10 @@ module ibex_simple_system (
   assign instr_gnt = instr_req;
   assign instr_err = '0;
 
+  `ifdef VERILATOR
     assign clk_sys = IO_CLK;
     assign rst_sys_n = IO_RST_N;
+  `else
     initial begin
       rst_sys_n = 1'b0;
       #8
@@ -128,6 +130,7 @@ module ibex_simple_system (
       #1 clk_sys = 1'b0;
       #1 clk_sys = 1'b1;
     end
+  `endif
 
   // Tie-off unused error signals
   assign device_err[Ram] = 1'b0;
