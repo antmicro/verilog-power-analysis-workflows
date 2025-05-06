@@ -1,90 +1,98 @@
-primitive altos_dff_err (q, clk, d);
-	output q;
-	reg q;
-	input clk, d;
+primitive prim_comb (q, clk, d);
+    output q;
+    input clk, d;
 
-	table
-		(0x) ? : ? : 0;
-		(1x) ? : ? : 1;
-	endtable
+    table
+        0 0 : 0 ;
+        0 1 : 1 ;
+        1 0 : 0 ;
+        1 1 : 1 ;
+    endtable
 endprimitive
 
-primitive altos_dff (q, v, clk, d, xcr);
-	output q;
-	reg q;
-	input v, clk, d, xcr;
+primitive prim_seq (q, clk, d);
+    output q;
+    reg q;
+    input clk, d;
 
-	table
-		*  ?   ? ? : ? : x;
-		? (x1) 0 0 : ? : 0;
-		? (x1) 1 0 : ? : 1;
-		? (x1) 0 1 : 0 : 0;
-		? (x1) 1 1 : 1 : 1;
-		? (x1) ? x : ? : -;
-		? (bx) 0 ? : 0 : -;
-		? (bx) 1 ? : 1 : -;
-		? (x0) b ? : ? : -;
-		? (x0) ? x : ? : -;
-		? (01) 0 ? : ? : 0;
-		? (01) 1 ? : ? : 1;
-		? (10) ? ? : ? : -;
-		?  b   * ? : ? : -;
-		?  ?   ? * : ? : -;
-	endtable
+    table
+        (01) 0 : ? : 0 ;
+        (01) 1 : ? : 1 ;
+        (10) 0 : ? : 0 ;
+        (10) 1 : ? : 1 ;
+    endtable
 endprimitive
 
-`timescale 1ns/10ps
-`celldefine
-module DFFHQNx1_ASAP7_75t_R (QN, D, CLK);
-	output QN;
-	input D, CLK;
-	reg notifier;
-	wire delayed_D, delayed_CLK;
+module cell_comb (QN, D, CLK);
+    output reg QN;
+    input D, CLK;
 
-	// Function
-	wire int_fwire_d, int_fwire_IQN, xcr_0;
-
-	not (int_fwire_d, delayed_D);
-	altos_dff_err (xcr_0, delayed_CLK, int_fwire_d);
-	altos_dff (int_fwire_IQN, notifier, delayed_CLK, int_fwire_d, xcr_0);
-	buf (QN, int_fwire_IQN);
-
-	// Timing
-	specify
-		(posedge CLK => (QN+:!D)) = 0;
-		$setuphold (posedge CLK, posedge D, 0, 0, notifier,,, delayed_CLK, delayed_D);
-		$setuphold (posedge CLK, negedge D, 0, 0, notifier,,, delayed_CLK, delayed_D);
-		$width (posedge CLK &&& D, 0, 0, notifier);
-		$width (negedge CLK &&& D, 0, 0, notifier);
-		$width (posedge CLK &&& ~D, 0, 0, notifier);
-		$width (negedge CLK &&& ~D, 0, 0, notifier);
-	endspecify
+    prim_comb (QN, CLK, D);
 endmodule
-`endcelldefine
+
+module cell_seq (QN, D, CLK);
+    output reg QN;
+    input D, CLK;
+
+    prim_seq (QN, CLK, D);
+endmodule
  
+integer log_fd;
+
 module t;
     reg CLK = 0;
     reg D = 0;
-    reg Q1, Q2, Q3;
+    reg Q1, Q2, Q3, Q4;
     always #5 CLK = ~CLK;
     always #20 D = ~D;
 
-    always @(posedge CLK) Q2 <= ~D;
-    always @(posedge CLK) Q3 = ~D;
+    initial begin
+        log_fd = $fopen("logs", "w");
+    end
+
+    final begin
+        $fclose(log_fd);
+    end
+
+    always @(posedge CLK) Q3 <= D;
+    always @(posedge CLK) Q4 = D;
     
     `ifndef VERILATOR
-        always @(edge Q3) #0 $display("Inactive");
+        always @(posedge CLK) #0 $display("Inactive");
     `endif
 
-    DFFHQNx1_ASAP7_75t_R dff (.QN(Q1), .*);
+    cell_comb comb (.QN(Q1), .*);
+    cell_seq seq (.QN(Q2), .*);
 
-    always @(edge Q1) $display("DFFHQNx1_ASAP7_75t_R    | D=%b Q1=%b Q2=%b Q3=%b", D, Q1, Q2, Q3);
-    always @(edge Q2) $display("@(posedge CLK) Q2 <= ~D | D=%b Q1=%b Q2=%b Q3=%b", D, Q1, Q2, Q3);
-    always @(edge Q3) $display("@(posedge CLK) Q3 = ~D  | D=%b Q1=%b Q2=%b Q3=%b", D, Q1, Q2, Q3);
+    always @(posedge Q1)
+    begin
+        $fwrite(log_fd, "Q1\n");
+        $fflush(log_fd);
+        $display("UDP comb               | D=%b Q1=%b Q2=%b Q3=%b Q4=%b", D, Q1, Q2, Q3, Q4);
+    end
+
+    always @(posedge Q2)
+    begin
+        $fwrite(log_fd, "Q2\n");
+        $fflush(log_fd);
+        $display("UDP seq                | D=%b Q1=%b Q2=%b Q3=%b Q4=%b", D, Q1, Q2, Q3, Q4);
+    end
+
+    always @(posedge Q3)
+    begin
+        $fwrite(log_fd, "Q3\n\n");
+        $fflush(log_fd);
+        $display("@(posedge CLK) Q2 <= D | D=%b Q1=%b Q2=%b Q3=%b Q4=%b\n----------------", D, Q1, Q2, Q3, Q4);
+    end
+
+    always @(posedge Q4)
+    begin
+        $fwrite(log_fd, "Q4\n");
+        $fflush(log_fd);
+        $display("@(posedge CLK) Q3 = D  | D=%b Q1=%b Q2=%b Q3=%b Q4=%b", D, Q1, Q2, Q3, Q4);
+    end
 
     initial begin
-        $dumpfile("dff.vcd");
-        $dumpvars;
-        #1000 $finish;
+        #200 $finish;
     end
 endmodule
