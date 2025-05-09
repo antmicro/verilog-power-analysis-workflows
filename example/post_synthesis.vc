@@ -4,27 +4,8 @@
 -j
 --top-module ibex_simple_system
 --exe
---timescale 1ns/1ps
-$ASAP7_SOURCES/asap7sc7p5t_AO_LVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_AO_RVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_AO_SLVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_AO_SRAM_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_INVBUF_LVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_INVBUF_RVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_INVBUF_SLVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_INVBUF_SRAM_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_OA_LVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_OA_RVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_OA_SLVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_OA_SRAM_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_SEQ_LVT_TT_220101.v
-$ASAP7_SOURCES/asap7sc7p5t_SEQ_RVT_TT_220101.v
-$ASAP7_SOURCES/asap7sc7p5t_SEQ_SLVT_TT_220101.v
-$ASAP7_SOURCES/asap7sc7p5t_SEQ_SRAM_TT_220101.v
-$ASAP7_SOURCES/asap7sc7p5t_SIMPLE_LVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_SIMPLE_RVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_SIMPLE_SLVT_TT_201020.v
-$ASAP7_SOURCES/asap7sc7p5t_SIMPLE_SRAM_TT_201020.v
+--timescale 1ns/10ps
+/home/mgancarz/dev/sky130hd/formal_pdk.v
 common.vlt
 prim_assert.vlt
 prim_generic_clock_gating.vlt
@@ -139,22 +120,7 @@ prim_mubi28_dec.sv
 prim_mubi32_sender.sv
 prim_mubi32_sync.sv
 prim_mubi32_dec.sv
-verilog/ibex_core/ibex_alu.v
-verilog/ibex_core/ibex_controller.v
-verilog/ibex_core/ibex_core.v
-verilog/ibex_core/ibex_counter.v
-verilog/ibex_core/ibex_cs_registers.v
-verilog/ibex_core/ibex_csr.v
-verilog/ibex_core/ibex_decoder.v
-verilog/ibex_core/ibex_dummy_instr.v
-verilog/ibex_core/ibex_ex_block.v
-verilog/ibex_core/ibex_id_stage.v
-verilog/ibex_core/ibex_if_stage_synth.v
-verilog/ibex_core/ibex_load_store_unit.v
-verilog/ibex_core/ibex_multdiv_fast.v
-verilog/ibex_core/ibex_multdiv_slow.v
-verilog/ibex_core/ibex_pmp.v
-verilog/ibex_core/ibex_wb_stage.v
+verilog/ibex_core/ibex_core_synth_sky.v
 ram_1p.sv
 ram_2p.sv
 bus.sv

@@ -229,8 +229,8 @@ void VerilatorSimCtrl::RegisterExtension(SimCtrlExtension *ext) {
 VerilatorSimCtrl::VerilatorSimCtrl()
     : top_(nullptr),
       time_(0),
-#ifdef VM_TRACE_FMT_FST
-      trace_file_path_("sim.fst"),
+#ifdef VM_TRACE_FMT_SAIF
+      trace_file_path_("sim.saif"),
 #else
       trace_file_path_("sim.vcd"),
 #endif

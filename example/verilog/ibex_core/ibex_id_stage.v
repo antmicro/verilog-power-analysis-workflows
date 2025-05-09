@@ -505,9 +505,6 @@ module ibex_id_stage (
 	assign illegal_insn_o = instr_valid_i & (((illegal_insn_dec | illegal_csr_insn_i) | illegal_dret_insn) | illegal_umode_insn);
 	assign mem_resp_intg_err = lsu_load_resp_intg_err_i | lsu_store_resp_intg_err_i;
 	ibex_controller #(
-		.WritebackStage(WritebackStage),
-		.BranchPredictor(BranchPredictor),
-		.MemECC(MemECC)
 	) controller_i(
 		.clk_i(clk_i),
 		.rst_ni(rst_ni),

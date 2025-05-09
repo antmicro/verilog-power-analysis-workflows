@@ -250,40 +250,6 @@ module ibex_top (
 		end
 	endgenerate
 	ibex_core #(
-		.PMPEnable(PMPEnable),
-		.PMPGranularity(PMPGranularity),
-		.PMPNumRegions(PMPNumRegions),
-		.PMPRstCfg(PMPRstCfg),
-		.PMPRstAddr(PMPRstAddr),
-		.PMPRstMsecCfg(PMPRstMsecCfg),
-		.MHPMCounterNum(MHPMCounterNum),
-		.MHPMCounterWidth(MHPMCounterWidth),
-		.RV32E(RV32E),
-		.RV32M(RV32M),
-		.RV32B(RV32B),
-		.BranchTargetALU(BranchTargetALU),
-		.ICache(ICache),
-		.ICacheECC(ICacheECC),
-		.BusSizeECC(BusSizeECC),
-		.TagSizeECC(TagSizeECC),
-		.LineSizeECC(LineSizeECC),
-		.BranchPredictor(BranchPredictor),
-		.DbgTriggerEn(DbgTriggerEn),
-		.DbgHwBreakNum(DbgHwBreakNum),
-		.WritebackStage(WritebackStage),
-		.ResetAll(ResetAll),
-		.RndCnstLfsrSeed(RndCnstLfsrSeed),
-		.RndCnstLfsrPerm(RndCnstLfsrPerm),
-		.SecureIbex(SecureIbex),
-		.DummyInstructions(DummyInstructions),
-		.RegFileECC(RegFileECC),
-		.RegFileDataWidth(RegFileDataWidth),
-		.MemECC(MemECC),
-		.MemDataWidth(MemDataWidth),
-		.DmBaseAddr(DmBaseAddr),
-		.DmAddrMask(DmAddrMask),
-		.DmHaltAddr(DmHaltAddr),
-		.DmExceptionAddr(DmExceptionAddr)
 	) u_ibex_core(
 		.clk_i(clk),
 		.rst_ni(rst_ni),
@@ -453,7 +419,7 @@ module ibex_top (
 			assign sv2v_tmp_E270A = 1'sb0;
 			always @(*) scramble_key_q = sv2v_tmp_E270A;
 			wire [64:1] sv2v_tmp_F758A;
-			assign sv2v_tmp_F758A = 64'sb0000000000000000000000000000000000000000000000000000000000000000;
+			assign sv2v_tmp_F758A = 1'sb0;
 			always @(*) scramble_nonce_q = sv2v_tmp_F758A;
 			wire [1:1] sv2v_tmp_604FC;
 			assign sv2v_tmp_604FC = 1'b1;
@@ -591,7 +557,7 @@ module ibex_top (
 			);
 		end
 		else begin : gen_no_mem_ecc
-			assign data_wdata_intg_o = 7'sb0000000;
+			assign data_wdata_intg_o = 1'sb0;
 		end
 		if (Lockstep) begin : gen_lockstep
 			localparam signed [31:0] NumBufferBits = ((((((((((((((((((99 + MemDataWidth) + 41) + MemDataWidth) + MemDataWidth) + 19) + RegFileDataWidth) + RegFileDataWidth) + RegFileDataWidth) + ibex_pkg_IC_NUM_WAYS) + 1) + ibex_pkg_IC_INDEX_W) + TagSizeECC) + ibex_pkg_IC_NUM_WAYS) + 1) + ibex_pkg_IC_INDEX_W) + LineSizeECC) + 184) + ibex_pkg_IbexMuBiWidth) + ibex_pkg_IbexMuBiWidth;
