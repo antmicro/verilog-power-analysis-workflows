@@ -1,99 +1,104 @@
-# ---
-# name: power-analysis-verilator-flow
+---
+name: power-analysis-verilator-flow
 
-# on:
-#   push:
-#   pull_request:
-#   workflow_dispatch:
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
-# env:
-#   CI_OS_NAME: linux
-#   CI_COMMIT: ${{ github.sha }}
-#   CCACHE_COMPRESS: 1
-#   CCACHE_DIR: ${{ github.workspace }}/.ccache
-#   CCACHE_LIMIT_MULTIPLE: 0.95
-#   INSTALL_DIR: ${{ github.workspace }}/install
-#   RELOC_DIR: ${{ github.workspace }}/relloc
+env:
+  CI_OS_NAME: linux
+  CI_COMMIT: ${{ github.sha }}
+  CCACHE_COMPRESS: 1
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_LIMIT_MULTIPLE: 0.95
+  INSTALL_DIR: ${{ github.workspace }}/install
+  RELOC_DIR: ${{ github.workspace }}/relloc
 
-# defaults:
-#   run:
-#     shell: bash
+defaults:
+  run:
+    shell: bash
 
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
-#   cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 
-# jobs:
-#   static-power-analysis:
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         os: [ubuntu-22.04]
-#     runs-on: ${{ matrix.os }}
-#     name: Static power verilator flow | ${{ matrix.os }}
-#     env:
-#       CI_BUILD_STAGE_NAME: build
-#       CI_RUNS_ON: ${{ matrix.os }}
-#       CACHE_BASE_KEY: build-${{ matrix.os }}
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+jobs:
+  static-power-analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    name: Static power verilator flow | ${{ matrix.os }}
+    env:
+      CI_BUILD_STAGE_NAME: build
+      CI_RUNS_ON: ${{ matrix.os }}
+      CACHE_BASE_KEY: build-${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Install dependencies
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout
-#           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
-        run: git clone https://github.com/antmicro/verilator
+        run: |
+          git clone https://github.com/verilator/verilator
+          # UDP changes commit
+          cd verilator && git checkout d0c4cc393869b5570e51ead2420dcc2ce60fe1b5
 
-#       - name: Build Verilator
-#         run: |
-#           tuttest README.md build-verilator | bash -
+      - name: Build Verilator
+        run: |
+          tuttest README.md build-verilator | bash -
 
-#       - name: Fetch OpenROAD-flow-scripts
-#         run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+      - name: Fetch OpenROAD-flow-scripts
+        run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
 
-#       - name: Build OpenROAD
-#         run: |
-#           tuttest README.md build-openroad | bash -
+      - name: Build OpenROAD
+        run: |
+          tuttest README.md build-openroad | bash -
 
-#       - name: Fetch asap7 sources
-#         run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
+      - name: Update OpenROAD ibex sources
+        run: |
+          mkdir -p OpenROAD-flow-scripts/flow/designs/src/ibex
+          cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
 
-#       - name: Run synthesis
-#         run: |
-#           cd OpenROAD-flow-scripts
-#           make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
+      - name: Run synth and route
+        run: |
+          cd OpenROAD-flow-scripts
+          make -C flow DESIGN_CONFIG=designs/sky130hd/ibex/config.mk route
 
-#       - name: Copy synthesized model to example directory
-#         run: |
-#           cp OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v saif_example/ibex.v
+      - name: Copy synthesized model to the example directory
+        run: |
+          cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
 
-#       - name: Generate SAIF file from simulation trace
-#         run: |
-#           export PATH=$PATH:$(pwd)/verilator/bin/
-          
-#           export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+      - name: Generate SAIF file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/verilator/bin/
+          export CELL_SOURCES=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/work_around_yosys/
 
-#           cd saif_example/
-#           verilator --cc --exe --build --trace-saif -j -Wno-fatal -I$MODEL_SOURCES ibex.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
-#           ./obj_dir/Vibex
+          cd example/
+          verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
+            -CFLAGS "-std=c++14 -Wall -DVM_TRACE_FMT_SAIF -DTOPLEVEL_NAME=ibex_simple_system -g" \
+            -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
+          ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
 
-#       - name: Generate power consumption report
-#         run: |
-#           export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+      - name: Generate power consumption report
+        run: |
+          export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
-#           tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
+          tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4.3.3
         with:
           name: static power analysis report
           path: |
-            OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-            saif_example/simx.saif
+            OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 
 #   peak-power-analysis:
 #     strategy:

@@ -5,7 +5,7 @@
 --top-module ibex_simple_system
 --exe
 --timescale 1ns/10ps
-/home/mgancarz/dev/sky130hd/formal_pdk.v
+$CELL_SOURCES/formal_pdk.v
 common.vlt
 prim_assert.vlt
 prim_generic_clock_gating.vlt

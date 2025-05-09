@@ -80,7 +80,7 @@ module ibex_if_stage (
 	parameter [31:0] TagSizeECC = ibex_pkg_IC_TAG_SIZE;
 	parameter [31:0] LineSizeECC = ibex_pkg_IC_LINE_SIZE;
 	parameter [0:0] PCIncrCheck = 1'b0;
-	parameter [0:0] ResetAll = 1'b0;
+	parameter [0:0] ResetAll = 1'b1;
 	localparam signed [31:0] ibex_pkg_LfsrWidth = 32;
 	localparam [31:0] ibex_pkg_RndCnstLfsrSeedDefault = 32'hac533bf4;
 	parameter [31:0] RndCnstLfsrSeed = ibex_pkg_RndCnstLfsrSeedDefault;

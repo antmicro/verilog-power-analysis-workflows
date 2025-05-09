@@ -377,6 +377,8 @@ module ibex_core (
 		.illegal_c_insn_id_o(illegal_c_insn_id),
 		.pc_if_o(pc_if),
 		.pc_id_o(pc_id),
+		.pmp_err_if_i(pmp_req_err[ibex_pkg_PMP_I]),
+		.pmp_err_if_plus2_i(pmp_req_err[ibex_pkg_PMP_I2]),
 		.instr_valid_clear_i(instr_valid_clear),
 		.pc_set_i(pc_set),
 		.pc_mux_i(pc_mux_id),
@@ -390,6 +392,7 @@ module ibex_core (
 		.csr_mtvec_i(csr_mtvec),
 		.csr_mtvec_init_o(csr_mtvec_init),
 		.id_in_ready_i(id_in_ready),
+		.pc_mismatch_alert_o(pc_mismatch_alert),
 		.if_busy_o(if_busy)
 	);
 	assign perf_iside_wait = id_in_ready & ~instr_valid_id;
