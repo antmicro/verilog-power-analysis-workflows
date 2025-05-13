@@ -1,0 +1,1 @@
+Copied from [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts/tree/26a14c7789d815add99123e6bd4c33bdb4ae2621/flow/designs/sky130hd/ibex)

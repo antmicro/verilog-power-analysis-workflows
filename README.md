@@ -54,8 +54,6 @@ cargo build --release
 export PATH=$PATH:$(pwd)/target/release/
 ```
 
-- [asap7sc7p5t_28](https://github.com/The-OpenROAD-Project/asap7sc7p5t_28) sources.
-
 ### Process model sources with Yosys and OpenROAD
 
 For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route step in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. From the `design` directory, copy `gcd_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/gcd_example` to `OpenROAD-flow-scripts/flow/designs/src/`
@@ -92,14 +90,16 @@ From the `saif_example` directory, run verilation and compile the model to an ex
 
 <!-- name="generate-saif-file" -->
 ```
-export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+export CELL_SOURCES=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/work_around_yosys/
 
-cd saif_example/
-verilator --cc --exe --build --trace-saif -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v saif_trace.cpp
-./obj_dir/Vgcd
+cd example/
+verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
+    -CFLAGS "-std=c++14 -Wall -DVM_TRACE_FMT_SAIF -DTOPLEVEL_NAME=ibex_simple_system -g" \
+    -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
+./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
 ```
 
-This will generate the `simx.saif` file in the current directory with the SAIF trace output.
+This will generate the `sim.saif` file in the current directory with the SAIF trace output.
 
 ### Generating power consumption report
 
@@ -129,17 +129,14 @@ openroad power.tcl -exit
 or you can just execute them manually after running `openroad` in the synthesis results directory:
 
 ```
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
+read_liberty $::env(LIB_DIR)/sky130_dummy_io.lib
+read_liberty $::env(LIB_DIR)/sky130_fd_sc_hd__tt_025C_1v80.lib
 
 read_db 5_route.odb
 
 read_sdc 1_synth.sdc
 
-read_saif -scope gcd_tb/gcd simx.saif
+read_saif -scope TOP/ibex_simple_system/u_top/u_ibex_top/u_ibex_core sim.saif
 report_power
 ```
 
@@ -168,14 +165,16 @@ From the `peak_power_example` directory, run verilation and compile the model to
 
 <!-- name="generate-vcd-file" -->
 ```
-export MODEL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog
+export CELL_SOURCES=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/work_around_yosys/
 
-cd peak_power_example/
-verilator --cc --exe --build --trace -j -Wno-fatal -timescale 1ns/1ps -I$MODEL_SOURCES gcd.v asap7sc7p5t_SIMPLE_RVT_TT_201020.v asap7sc7p5t_INVBUF_RVT_TT_201020.v asap7sc7p5t_AO_RVT_TT_201020.v asap7sc7p5t_OA_RVT_TT_201020.v asap7sc7p5t_SEQ_RVT_TT_220101.v vcd_trace.cpp
-./obj_dir/Vgcd
+cd example/
+verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-params --trace-max-array 1024 \
+    -CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=ibex_simple_system -g" \
+    -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
+./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
 ```
 
-This will generate the `simx.vcd` file in the current directory with the VCD trace output.
+This will generate the `sim.vcd` file in the current directory with the VCD trace output.
 
 ### Processing VCD file to base per clock cycle power TCL scripts
 
@@ -195,7 +194,7 @@ To generate per clock cycle total power TCL scripts, which will be used to gener
 ```
 cd peak_power_example/
 mkdir -p total_output
-trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --output total_output simx.vcd
+trace2power --clk-freq 200000000 --top u_ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --output total_output sim.vcd
 ```
 
 ### Generating peak power report
@@ -204,23 +203,28 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
+<<<<<<< HEAD
 cp peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+=======
+cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+>>>>>>> cdbe44c (work on dynamic power ibex simulation)
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
 
 <!-- name="export-liberty-path" -->
 ```
-export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/lib/
 ```
 
 Go to the synthesis results directory and then run the peak power script:
 
 <!-- name="execute-peak-power-script" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 mkdir -p total_result
 python3 peak_power.py --base base_output --total total_output
 ```
@@ -247,7 +251,7 @@ To generate per clock cycle glitch TCL scripts, which will be used to generate p
 ```
 cd peak_power_example/
 mkdir -p glitch_output
-trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output simx.vcd
+trace2power --clk-freq 200000000 --top u_ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output sim.vcd
 ```
 
 ### Generating peak power with glitches report
@@ -256,24 +260,23 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
-cp peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
 
 <!-- name="export-liberty-path" -->
 ```
-export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/lib/
 ```
 
 Go to the synthesis results directory and then run the glitch power script:
 
 <!-- name="execute-glitch-power-script" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
+cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 mkdir -p total_result glitch_result
 python3 peak_power.py --base base_output --total total_output --glitch glitch_output
 ```
