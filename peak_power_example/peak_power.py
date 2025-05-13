@@ -48,16 +48,14 @@ args = parser.parse_args()
 
 open_road_command = 'openroad'
 open_road_script = 'power.tcl'
-base_power_result_path = 'base_result'
-total_power_result_directory = 'total_result'
-glitch_power_result_directory = 'glitch_result'
+result_path = "result"
+base_power_result_path = os.path.join(result_path, args.base)
+total_power_result_directory = os.path.join(result_path, args.total)
+glitch_power_result_directory = os.path.join(result_path, args.glitch)
 
 tcl_script = """
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
-read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
+read_liberty $::env(LIB_DIR)/sky130_dummy_io.lib
+read_liberty $::env(LIB_DIR)/sky130_fd_sc_hd__tt_025C_1v80.lib
 
 read_db 5_route.odb
 
@@ -65,26 +63,40 @@ read_sdc 1_synth.sdc
 
 """
 
+if not os.path.exists(result_path):
+    os.makedirs(result_path)
+
+if not os.path.exists(total_power_result_directory):
+    os.makedirs(total_power_result_directory)
+
 total_power_files = os.listdir(args.total)
 total_power_files = sorted(total_power_files)
 
-for file in total_power_files:
-    tcl_script += f"""
-source {os.path.join(args.total, file)}
-set_pin_activity_and_duty
-report_power > {os.path.join(total_power_result_directory, file)}
+tcl_script += f"""
+set all_total [glob -directory "{args.total}" -- "*"]
+"""
+tcl_script += """
+foreach f $all_total {
+    source "$f"
+    set_pin_activity_and_duty
+    report_power > "result/$f"
+}
 """
 
 if args.glitch:
-    glitch_power_files = os.listdir(args.glitch)
-    glitch_power_files = sorted(glitch_power_files)
-        
-    for file in glitch_power_files:
-        tcl_script += f"""
-source {os.path.join(args.glitch, file)}
-set_pin_activity_and_duty
-report_power > {os.path.join(glitch_power_result_directory, file)}
-        """
+    if not os.path.exists(glitch_power_result_directory):
+        os.makedirs(glitch_power_result_directory)
+
+    tcl_script += f"""
+set all_glitch [glob -directory "{args.glitch}" -- "*"]
+"""
+    tcl_script += """
+foreach f $all_glitch {
+    source "$f"
+    set_pin_activity_and_duty
+    report_power > "result/$f"
+}
+    """
 
 tcl_script += f"""
 

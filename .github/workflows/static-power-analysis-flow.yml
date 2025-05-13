@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
@@ -123,7 +123,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout
+          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout libelf-dev
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
@@ -231,7 +231,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout
+          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout libelf-dev
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
