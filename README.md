@@ -16,7 +16,7 @@ These instructions assumes that all required projects are located in the same di
 
 The following projects need to be cloned and built:
 
-- [Verilator](https://github.com/verilator/verilator). It can be built by going into the project directory and executing these commands:
+- [Verilator](https://github.com/verilator/verilator) (tested on commit `d0c4cc39`). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
@@ -31,7 +31,7 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD` (tested on commit `d62c05a8`). To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
@@ -44,7 +44,7 @@ sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
-- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from branch `72335-peak-power-analysis` in case of peak power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
+- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from branch `74949-glitch-power` in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
 <!-- name="build-trace-to-power" -->
 ```
@@ -56,37 +56,31 @@ export PATH=$PATH:$(pwd)/target/release/
 
 ### Process model sources with Yosys and OpenROAD
 
-For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route step in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. From the `design` directory, copy `gcd_example` contents to `OpenROAD-flow-scripts/flow/designs/asap7/` and `src/gcd_example` to `OpenROAD-flow-scripts/flow/designs/src/`
+For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route step in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `sky130hd` platform. Copy design contents from `example` directory to `OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/` and `OpenROAD-flow-scripts/flow/designs/src/ibex`:
 
 <!-- name="copy-model-sources" -->
 ```
-cp -r design/gcd_example OpenROAD-flow-scripts/flow/designs/asap7/
-cp -r design/src/gcd_example OpenROAD-flow-scripts/flow/designs/src/
+cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
+
+rm OpenROAD-flow-scripts/flow/designs/src/ibex/*
+cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
 ```
 
-Then go to the `OpenROAD-flow-scripts` project top directory and run the `Yosys` synthesis:
+Then go to the `OpenROAD-flow-scripts` project top directory and run the required synthesis, place and route steps:
 
-<!-- name="run-yosys-synthesis" -->
-```
-cd OpenROAD-flow-scripts
-make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk synth
-```
-
-After that you can run place and route step:
-
-<!-- name="run-place-and-route" -->
+<!-- name="run-synthesis-steps" -->
 ```
 cd OpenROAD-flow-scripts
-make -C flow DESIGN_CONFIG=designs/asap7/gcd_example/config.mk route
+make -C flow DESIGN_CONFIG=designs/sky130hd/ibex/config.mk route
 ```
 
-Finally copy the result of synthesis to relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/1_synth.v` to `saif_example/gcd.v`.
+Finally copy the result of synthesis to relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v` to `example/verilog/ibex_core/ibex_core_synth_sky.v`.
 
 ## Static power analysis workflow
 
 ### Generating SAIF file from trace
 
-From the `saif_example` directory, run verilation and compile the model to an executable with the SAIF trace flag enabled `--trace-saif` and then run a simulation with the generated binary:
+From the `example` directory, run verilation and compile the model to an executable with the SAIF trace flag enabled `--trace-saif` and then run a simulation with the generated binary:
 
 <!-- name="generate-saif-file" -->
 ```
@@ -161,7 +155,7 @@ Total                  3.18e-05   1.35e-05   3.70e-08   4.54e-05 100.0%
 
 ### Generating VCD file from trace
 
-From the `peak_power_example` directory, run verilation and compile the model to an executable with the trace flag enabled `--trace` and then run a simulation with the generated binary:
+From the `example` directory, run verilation and compile the model to an executable with the trace flag enabled `--trace` and then run a simulation with the generated binary:
 
 <!-- name="generate-vcd-file" -->
 ```
@@ -182,8 +176,8 @@ To generate base per clock cycle power TCL scripts, which will be used to offset
 
 <!-- name="process-empty-vcd-output" -->
 ```
-cd peak_power_example/
-trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
+cd example/
+trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --export-empty --output base_output sim.vcd
 ```
 
 ### Processing VCD file to per clock cycle total power TCL scripts
@@ -192,9 +186,9 @@ To generate per clock cycle total power TCL scripts, which will be used to gener
 
 <!-- name="process-total-vcd-output" -->
 ```
-cd peak_power_example/
+cd example/
 mkdir -p total_output
-trace2power --clk-freq 200000000 --top u_ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --output total_output sim.vcd
+trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --output total_output sim.vcd
 ```
 
 ### Generating peak power report
@@ -203,14 +197,9 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
-<<<<<<< HEAD
-cp peak_power_example/base_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/gcd_example/base/
-=======
-cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp -r example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp example/base_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
->>>>>>> cdbe44c (work on dynamic power ibex simulation)
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
@@ -225,7 +214,6 @@ Go to the synthesis results directory and then run the peak power script:
 <!-- name="execute-peak-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
-mkdir -p total_result
 python3 peak_power.py --base base_output --total total_output
 ```
 
@@ -247,11 +235,11 @@ Maximum power consumption of a single clock cycle is 0.000278 Watts and occurred
 
 To generate per clock cycle glitch TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
 
-<!-- name="process-vcd-output-with-glitches" -->
+<!-- name="process-glitch-vcd-output" -->
 ```
-cd peak_power_example/
+cd example/
 mkdir -p glitch_output
-trace2power --clk-freq 200000000 --top u_ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output sim.vcd
+trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output sim.vcd
 ```
 
 ### Generating peak power with glitches report
@@ -260,8 +248,9 @@ Copy previously generated TCL files with required scripts to the synthesis resul
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
-cp -r peak_power_example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
-cp -r peak_power_example/glitch_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp -r example/total_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp -r example/glitch_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+cp example/base_output OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
 ```
 
@@ -277,7 +266,6 @@ Go to the synthesis results directory and then run the glitch power script:
 <!-- name="execute-glitch-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
-mkdir -p total_result glitch_result
 python3 peak_power.py --base base_output --total total_output --glitch glitch_output
 ```
 

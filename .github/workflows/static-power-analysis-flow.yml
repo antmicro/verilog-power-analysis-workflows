@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     name: Static power verilator flow | ${{ matrix.os }}
     env:
@@ -58,15 +58,11 @@ jobs:
       - name: Fetch OpenROAD-flow-scripts
         run: |
           git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts
-          git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
+          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
 
       - name: Update OpenROAD ibex sources
         run: |
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-          rm OpenROAD-flow-scripts/flow/designs/src/ibex/*
-          cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
+          tuttest README.md copy-model-sources | bash -
 
       - name: Build OpenROAD
         run: |
@@ -74,8 +70,7 @@ jobs:
 
       - name: Run synth and route
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/sky130hd/ibex/config.mk route
+          tuttest README.md run-synthesis-steps | bash -
 
       - name: Copy synthesized model to the example directory
         run: |
@@ -84,13 +79,7 @@ jobs:
       - name: Generate SAIF file from simulation trace
         run: |
           export PATH=$PATH:$(pwd)/verilator/bin/
-          export CELL_SOURCES=$(pwd)/OpenROAD-flow-scripts/flow/platforms/sky130hd/work_around_yosys/
-
-          cd example/
-          verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
-            -CFLAGS "-std=c++14 -Wall -DVM_TRACE_FMT_SAIF -DTOPLEVEL_NAME=ibex_simple_system -g" \
-            -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
-          ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+          tuttest README.md generate-saif-file | bash -
 
       - name: Generate power consumption report
         run: |
@@ -104,6 +93,7 @@ jobs:
           name: static power analysis report
           path: |
             OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+            example/sim.saif
 
   peak-power-analysis:
     strategy:
@@ -123,9 +113,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout libelf-dev
-          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
         run: |
@@ -139,20 +128,12 @@ jobs:
 
       - name: Fetch OpenROAD-flow-scripts
         run: |
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-          rm OpenROAD-flow-scripts/flow/designs/src/ibex/*
-          cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
+          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
 
       - name: Update OpenROAD ibex sources
         run: |
-          mkdir -p OpenROAD-flow-scripts/flow/designs/sky130hd/ibex
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-      - name: Fetch trace2power
-        run: |
-          git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
-          cd trace2power && git status
+          tuttest README.md copy-model-sources | bash -
 
       - name: Build OpenROAD
         run: |
@@ -169,10 +150,9 @@ jobs:
 
       - name: Run synth and route
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/sky130hd/ibex/config.mk route
+          tuttest README.md run-synthesis-steps | bash -
 
-      - name: Copy synthesized model to example directory
+      - name: Copy synthesized model to the example directory
         run: |
           cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
 
@@ -182,24 +162,18 @@ jobs:
 
           tuttest README.md generate-vcd-file | bash -
 
-      - name: Process total power from VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/trace2power/target/release/
-
       - name: Process base power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          cd peak_power_example/
-          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
-          cat base_output
+          tuttest README.md process-empty-vcd-output | bash -
 
       - name: Process total power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-#           tuttest README.md process-total-vcd-output | bash -
-      
+          tuttest README.md process-total-vcd-output | bash -
+
       - name: Generate peak power report
         run: |
           export PATH=$PATH:$(pwd)/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
@@ -212,6 +186,7 @@ jobs:
           name: peak power analysis report
           path: |
             OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+            example/sim.vcd
 
   glitch-power-analysis:
     strategy:
@@ -231,9 +206,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 clang gcc make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx curl klayout libelf-dev
-          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
       - name: Fetch Verilator
         run: |
@@ -247,20 +221,12 @@ jobs:
 
       - name: Fetch OpenROAD-flow-scripts
         run: |
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-          rm OpenROAD-flow-scripts/flow/designs/src/ibex/*
-          cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
+          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
 
       - name: Update OpenROAD ibex sources
         run: |
-          mkdir -p OpenROAD-flow-scripts/flow/designs/sky130hd/ibex
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-      - name: Fetch trace2power
-        run: |
-          git clone https://github.com/antmicro/trace2power -b "74949-glitch-power"
-          cd trace2power && git status
+          tuttest README.md copy-model-sources | bash -
 
       - name: Build OpenROAD
         run: |
@@ -277,10 +243,9 @@ jobs:
 
       - name: Run synth and route
         run: |
-          cd OpenROAD-flow-scripts
-          make -C flow DESIGN_CONFIG=designs/sky130hd/ibex/config.mk route
+          tuttest README.md run-synthesis-steps | bash -
 
-      - name: Copy synthesized model to example directory
+      - name: Copy synthesized model to the example directory
         run: |
           cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
 
@@ -290,27 +255,23 @@ jobs:
 
           tuttest README.md generate-vcd-file | bash -
 
-      - name: Process total power from VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/trace2power/target/release/
-
       - name: Process base power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          cd peak_power_example/
-          trace2power --clk-freq 200000000 --top gcd --limit-scope gcd_tb.gcd --remove-virtual-pins --export-empty --output base_output simx.vcd
-          cat base_output
+          tuttest README.md process-empty-vcd-output | bash -
 
       - name: Process total power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
+
+          tuttest README.md process-total-vcd-output | bash -
 
       - name: Process glitch power from VCD with trace2power
         run: |
           export PATH=$PATH:$(pwd)/trace2power/target/release/
 
-          tuttest README.md process-vcd-output-with-glitches | bash -
+          tuttest README.md process-glitch-vcd-output | bash -
       
       - name: Generate peak power with glitches report
         run: |
