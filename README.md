@@ -239,7 +239,7 @@ To generate per clock cycle glitch TCL scripts, which will be used to generate p
 ```
 cd example/
 mkdir -p glitch_output
-trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk --output glitch_output sim.vcd
+trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk_sys --output glitch_output sim.vcd
 ```
 
 ### Generating peak power with glitches report
