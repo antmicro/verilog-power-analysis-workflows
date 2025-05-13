@@ -8,7 +8,7 @@ Antmicro's demonstration of power analysis workflows with [Verilator](https://gi
 
 These workflows have been tested on Ubuntu 24.04 and Debian 12.
 
-To demonstrate workflows of power analysis with Verilator and OpenSTA, instructions below and a simple `gcd` example have been prepared.
+To demonstrate workflows of power analysis with Verilator and OpenSTA, instructions below and a `ibex` example have been prepared.
 
 ## Prerequisites
 
