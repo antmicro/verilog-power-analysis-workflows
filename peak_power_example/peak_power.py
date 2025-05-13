@@ -52,7 +52,7 @@ base_power_result_path = 'base_result'
 total_power_result_directory = 'total_result'
 glitch_power_result_directory = 'glitch_result'
 
-tcl_script = f"""
+tcl_script = """
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
@@ -63,9 +63,6 @@ read_db 5_route.odb
 
 read_sdc 1_synth.sdc
 
-source {args.base}
-set_pin_activity_and_duty
-report_power > {base_power_result_path}
 """
 
 total_power_files = os.listdir(args.total)
@@ -84,10 +81,18 @@ if args.glitch:
         
     for file in glitch_power_files:
         tcl_script += f"""
-    source {os.path.join(args.glitch, file)}
-    set_pin_activity_and_duty
-    report_power > {os.path.join(glitch_power_result_directory, file)}
-    """
+source {os.path.join(args.glitch, file)}
+set_pin_activity_and_duty
+report_power > {os.path.join(glitch_power_result_directory, file)}
+        """
+
+tcl_script += f"""
+
+source {args.base}
+set_pin_activity_and_duty
+report_power > {base_power_result_path}
+
+"""
     
 with open(open_road_script, 'w') as file:
     file.write(tcl_script)
