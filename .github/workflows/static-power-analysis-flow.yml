@@ -56,14 +56,14 @@ jobs:
           tuttest README.md build-verilator | bash -
 
       - name: Fetch OpenROAD-flow-scripts
-        run: git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+        run: |
+          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts
+          git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
 
       - name: Update OpenROAD ibex sources
         run: |
-          mkdir -p OpenROAD-flow-scripts/flow/designs/sky130hd/ibex
-          cp example/design/* OpenROAD-flow-scripts/flow/designs/sky130hd/ibex/
-
-          mkdir -p OpenROAD-flow-scripts/flow/designs/src/ibex
+          rm OpenROAD-flow-scripts/flow/designs/src/ibex/*
           cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
 
       - name: Build OpenROAD
