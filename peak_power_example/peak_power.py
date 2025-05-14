@@ -19,6 +19,7 @@ import re
 import subprocess
 import os
 import matplotlib.pyplot as plt
+import csv
 
 
 def read_from_file(file_name: str):
@@ -43,6 +44,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--base', action='store', help='Path to file with base power report')
 parser.add_argument('--total', action='store', help='Path to directory with total report for each clock cycle from simulation')
 parser.add_argument('--glitch', action='store', help='Path to directory with glitch report for each clock cycle from simulation')
+parser.add_argument('--csv', action='store', help='Export results to a CSV file')
 parser.set_defaults(stop=True)
 args = parser.parse_args()
 
@@ -161,3 +163,23 @@ plt.grid(True)
 print(f"Maximum power consumption of a single clock cycle is {peak_power} Watts and occurred in clock cycle #{peak_power_clock_cycle}")
 
 plt.savefig('report.png')
+
+if args.csv:
+    csv_filename = args.csv
+
+    with open(csv_filename, mode="w", newline="") as file:
+        writer = csv.writer(file)
+
+        column_titles = ["Clock cycle index", "Total power"]
+
+        if args.glitch:
+            column_titles.append("Glitch power")
+        
+        writer.writerow(column_titles)
+        
+        if args.glitch:
+            values = list(zip(clock_cycles_indices, total_power_results, glitch_power_results))
+        else:
+            values = list(zip(clock_cycles_indices, total_power_results))
+
+        writer.writerows(values)
