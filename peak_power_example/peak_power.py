@@ -130,7 +130,7 @@ for file in total_power_result_files:
     clock_cycles_indices.append(current_clock_cycle)
     print(f'Processing clock cycle #{current_clock_cycle}')
     report_contents = read_from_file(os.path.join(total_power_result_directory, file))
-    total_power = search_for_total_power(report_contents) - base_power
+    total_power = search_for_total_power(report_contents)
     if (total_power > peak_power):
         peak_power = total_power
         peak_power_clock_cycle = current_clock_cycle
