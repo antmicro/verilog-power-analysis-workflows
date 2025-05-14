@@ -28,10 +28,10 @@ def read_from_file(file_name: str):
 
 def search_for_total_power(report_power: list[str]):
     for line in report_power:
-        match = re.match(r'Total\s+(([\w\.\-]+\s+)+)', line)
-        if match:
-            total_power = match.group(2).replace(' ', '')
-            return float(total_power)
+        if line.startswith('Total'):
+            match = re.findall(r'\d*\.\d+(?:[eE][-+]?\d+)?', line)
+            total_power = float(match[0]) + float(match[1]) + float(match[2])
+            return total_power
         
     return 0
 
@@ -51,7 +51,9 @@ open_road_script = 'power.tcl'
 result_path = "result"
 base_power_result_path = os.path.join(result_path, args.base)
 total_power_result_directory = os.path.join(result_path, args.total)
-glitch_power_result_directory = os.path.join(result_path, args.glitch)
+
+if not os.path.exists(result_path):
+    os.makedirs(result_path)
 
 tcl_script = """
 read_liberty $::env(LIB_DIR)/sky130_dummy_io.lib
@@ -63,8 +65,13 @@ read_sdc 1_synth.sdc
 
 """
 
-if not os.path.exists(result_path):
-    os.makedirs(result_path)
+tcl_script += f"""
+
+source {args.base}
+set_pin_activity_and_duty
+report_power > {base_power_result_path}
+
+"""
 
 if not os.path.exists(total_power_result_directory):
     os.makedirs(total_power_result_directory)
@@ -84,6 +91,7 @@ foreach f $all_total {
 """
 
 if args.glitch:
+    glitch_power_result_directory = os.path.join(result_path, args.glitch)
     if not os.path.exists(glitch_power_result_directory):
         os.makedirs(glitch_power_result_directory)
 
@@ -97,14 +105,6 @@ foreach f $all_glitch {
     report_power > "result/$f"
 }
     """
-
-tcl_script += f"""
-
-source {args.base}
-set_pin_activity_and_duty
-report_power > {base_power_result_path}
-
-"""
     
 with open(open_road_script, 'w') as file:
     file.write(tcl_script)
