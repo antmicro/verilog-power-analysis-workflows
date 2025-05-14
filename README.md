@@ -137,18 +137,18 @@ report_power
 This will generate power consumption report that should look like this:
 
 ```
-Annotated 159 pin activities.
+Annotated 212 pin activities.
 Group                  Internal  Switching    Leakage      Total
                           Power      Power      Power      Power (Watts)
 ----------------------------------------------------------------
-Sequential             1.32e-05   1.04e-06   6.97e-09   1.42e-05  31.3%
-Combinational          1.63e-05   9.74e-06   2.97e-08   2.60e-05  57.3%
-Clock                  2.43e-06   2.76e-06   4.02e-10   5.19e-06  11.4%
+Sequential             4.06e+00   9.64e-02   9.49e-09   4.16e+00  43.9%
+Combinational          8.64e-01   7.45e-01   3.43e-08   1.61e+00  17.0%
+Clock                  2.65e+00   1.05e+00   1.92e-09   3.70e+00  39.1%
 Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
 ----------------------------------------------------------------
-Total                  3.18e-05   1.35e-05   3.70e-08   4.54e-05 100.0%
-                          70.1%      29.8%       0.1%
+Total                  7.58e+00   1.89e+00   4.57e-08   9.47e+00 100.0%
+                          80.1%      19.9%       0.0%
 ```
 
 ## Peak and glitch power analysis workflow
@@ -214,21 +214,23 @@ Go to the synthesis results directory and then run the peak power script:
 <!-- name="execute-peak-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
-python3 peak_power.py --base base_output --total total_output
+python3 peak_power.py --base base_output --total total_output --csv power_analysis.csv
 ```
 
 This will visualize power consumption over time and output maximum encountered value:
 
 ```
 ...
-Processing clock cycle #23
-Processing clock cycle #24
-Processing clock cycle #25
-Processing clock cycle #26
-Processing clock cycle #27
-Processing clock cycle #28
-Processing clock cycle #29
-Maximum power consumption of a single clock cycle is 0.000278 Watts and occurred in clock cycle #0
+Processing clock cycle #220
+Processing clock cycle #221
+Processing clock cycle #222
+Processing clock cycle #223
+Processing clock cycle #224
+Processing clock cycle #225
+Processing clock cycle #226
+Processing clock cycle #227
+Processing clock cycle #228
+Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
 
 ### Processing VCD file to per clock cycle glitch power TCL scripts
@@ -266,19 +268,21 @@ Go to the synthesis results directory and then run the glitch power script:
 <!-- name="execute-glitch-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
-python3 peak_power.py --base base_output --total total_output --glitch glitch_output
+python3 peak_power.py --base base_output --total total_output --glitch glitch_output --csv power_analysis.csv
 ```
 
 This will visualize power consumption over time with per clock cycle total/glitch power and output maximum encountered value:
 
 ```
 ...
-Processing clock cycle #23
-Processing clock cycle #24
-Processing clock cycle #25
-Processing clock cycle #26
-Processing clock cycle #27
-Processing clock cycle #28
-Processing clock cycle #29
-Maximum power consumption of a single clock cycle is 0.000278 Watts and occurred in clock cycle #0
+Processing clock cycle #220
+Processing clock cycle #221
+Processing clock cycle #222
+Processing clock cycle #223
+Processing clock cycle #224
+Processing clock cycle #225
+Processing clock cycle #226
+Processing clock cycle #227
+Processing clock cycle #228
+Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
