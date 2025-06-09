@@ -5,7 +5,16 @@
 --top-module ibex_simple_system
 --exe
 --timescale 1ns/10ps
-$CELL_SOURCES/formal_pdk.v
+$CELL_SOURCES/asap7sc7p5t_AO_RVT_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_AO_SRAM_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_INVBUF_RVT_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_INVBUF_SRAM_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_OA_RVT_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_OA_SRAM_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_SEQ_RVT_TT_220101.v
+$CELL_SOURCES/asap7sc7p5t_SEQ_SRAM_TT_220101.v
+$CELL_SOURCES/asap7sc7p5t_SIMPLE_RVT_TT_201020.v
+$CELL_SOURCES/asap7sc7p5t_SIMPLE_SRAM_TT_201020.v
 common.vlt
 prim_assert.vlt
 prim_generic_clock_gating.vlt
@@ -120,7 +129,7 @@ prim_mubi28_dec.sv
 prim_mubi32_sender.sv
 prim_mubi32_sync.sv
 prim_mubi32_dec.sv
-verilog/ibex_core/ibex_core_synth_sky.v
+verilog/ibex_core/ibex_core_synth.v
 ram_1p.sv
 ram_2p.sv
 bus.sv
