@@ -1,6 +1,6 @@
 export DESIGN_NICKNAME = ibex
 export DESIGN_NAME = ibex_core
-export PLATFORM    = sky130hd
+export PLATFORM    = asap7
 
 export VERILOG_FILES         = $(sort $(wildcard $(DESIGN_HOME)/src/$(DESIGN_NICKNAME)/*.v))
 export SDC_FILE              = $(DESIGN_HOME)/$(PLATFORM)/$(DESIGN_NICKNAME)/constraint.sdc

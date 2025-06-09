@@ -58,8 +58,11 @@ if not os.path.exists(result_path):
     os.makedirs(result_path)
 
 tcl_script = """
-read_liberty $::env(LIB_DIR)/sky130_dummy_io.lib
-read_liberty $::env(LIB_DIR)/sky130_fd_sc_hd__tt_025C_1v80.lib
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
 read_db 5_route.odb
 
