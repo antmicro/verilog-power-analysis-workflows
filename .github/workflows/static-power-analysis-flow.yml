@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     name: Static power verilator flow | ${{ matrix.os }}
     env:
@@ -55,10 +55,13 @@ jobs:
         run: |
           tuttest README.md build-verilator | bash -
 
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
+
       - name: Fetch OpenROAD-flow-scripts
         run: |
           git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
+          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
 
       - name: Update OpenROAD ibex sources
         run: |
@@ -74,7 +77,7 @@ jobs:
 
       - name: Copy synthesized model to the example directory
         run: |
-          cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
+          cp OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth.v
 
       - name: Generate SAIF file from simulation trace
         run: |
@@ -92,8 +95,9 @@ jobs:
         with:
           name: static power analysis report
           path: |
-            OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+            OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
             example/sim.saif
+            example/ibex_simple_system.log
 
   peak-power-analysis:
     strategy:
@@ -127,10 +131,13 @@ jobs:
         run: |
           tuttest README.md build-verilator | bash -
 
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
+
       - name: Fetch OpenROAD-flow-scripts
         run: |
           git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
+          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
 
       - name: Update OpenROAD ibex sources
         run: |
@@ -155,7 +162,7 @@ jobs:
 
       - name: Copy synthesized model to the example directory
         run: |
-          cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
+          cp OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth.v
 
       - name: Generate VCD file from simulation trace
         run: |
@@ -186,8 +193,9 @@ jobs:
         with:
           name: peak power analysis report
           path: |
-            OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+            OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
             example/sim.vcd
+            example/ibex_simple_system.log
 
   glitch-power-analysis:
     strategy:
@@ -221,10 +229,13 @@ jobs:
         run: |
           tuttest README.md build-verilator | bash -
 
+      - name: Fetch asap7 sources
+        run: git clone https://github.com/The-OpenROAD-Project/asap7sc7p5t_28
+
       - name: Fetch OpenROAD-flow-scripts
         run: |
           git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout d62c05a87108d1ec50945c7e8d893b58dd778094
+          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
 
       - name: Update OpenROAD ibex sources
         run: |
@@ -249,7 +260,7 @@ jobs:
 
       - name: Copy synthesized model to the example directory
         run: |
-          cp OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth_sky.v
+          cp OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/verilog/ibex_core/ibex_core_synth.v
 
       - name: Generate VCD file from simulation trace
         run: |
@@ -285,4 +296,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: peak power with glitches analysis report
-          path: OpenROAD-flow-scripts/flow/results/sky130hd/ibex/base/
+          path: |
+            OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+            example/sim.vcd
+            example/ibex_simple_system.log
