@@ -44,6 +44,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--base', action='store', help='Path to file with base power report')
 parser.add_argument('--total', action='store', help='Path to directory with total report for each clock cycle from simulation')
 parser.add_argument('--glitch', action='store', help='Path to directory with glitch report for each clock cycle from simulation')
+parser.add_argument('--cycles', action='store', help='Num of cycles to generate peak/glitch power report from')
 parser.add_argument('--csv', action='store', help='Export results to a CSV file')
 parser.set_defaults(stop=True)
 args = parser.parse_args()
@@ -57,6 +58,13 @@ total_power_result_directory = os.path.join(result_path, args.total)
 if not os.path.exists(result_path):
     os.makedirs(result_path)
 
+total_cycles = 0
+if not args.cycles:
+    total_power_files = os.listdir(args.total)
+    total_cycles = len(total_power_files) - 1
+else:
+    total_cycles = args.cycles - 1
+
 tcl_script = """
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
@@ -64,8 +72,8 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
-read_db 5_route.odb
-
+read_verilog 1_synth.v
+link_design ibex_core
 read_sdc 1_synth.sdc
 
 """
@@ -81,14 +89,13 @@ report_power > {base_power_result_path}
 if not os.path.exists(total_power_result_directory):
     os.makedirs(total_power_result_directory)
 
-total_power_files = os.listdir(args.total)
-total_power_files = sorted(total_power_files)
-
 tcl_script += f"""
 set all_total [glob -directory "{args.total}" -- "*"]
+set all_total_sorted [lsort $all_total]
+set truncated_total [lrange $all_total_sorted 0 {total_cycles}]
 """
 tcl_script += """
-foreach f $all_total {
+foreach f $truncated_total {
     source "$f"
     set_pin_activity_and_duty
     report_power > "result/$f"
@@ -102,9 +109,11 @@ if args.glitch:
 
     tcl_script += f"""
 set all_glitch [glob -directory "{args.glitch}" -- "*"]
+set all_glitch_sorted [lsort $all_glitch]
+set truncated_glitch [lrange $all_glitch_sorted 0 {total_cycles}]
 """
     tcl_script += """
-foreach f $all_glitch {
+foreach f $truncated_glitch {
     source "$f"
     set_pin_activity_and_duty
     report_power > "result/$f"
