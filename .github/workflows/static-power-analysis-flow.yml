@@ -48,8 +48,6 @@ jobs:
       - name: Fetch Verilator
         run: |
           git clone https://github.com/verilator/verilator
-          # UDP changes commit
-          cd verilator && git checkout d0c4cc393869b5570e51ead2420dcc2ce60fe1b5
 
       - name: Build Verilator
         run: |
@@ -60,8 +58,8 @@ jobs:
 
       - name: Fetch OpenROAD-flow-scripts
         run: |
-          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
+          git clone https://github.com/antmicro/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts && git fetch && git checkout mgan/custom-hier-separator-and-dff-fix
 
       - name: Update OpenROAD ibex sources
         run: |
@@ -124,8 +122,6 @@ jobs:
       - name: Fetch Verilator
         run: |
           git clone https://github.com/verilator/verilator
-          # UDP changes commit
-          cd verilator && git checkout d0c4cc393869b5570e51ead2420dcc2ce60fe1b5
 
       - name: Build Verilator
         run: |
@@ -136,8 +132,8 @@ jobs:
 
       - name: Fetch OpenROAD-flow-scripts
         run: |
-          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
+          git clone https://github.com/antmicro/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts && git fetch && git checkout mgan/custom-hier-separator-and-dff-fix
 
       - name: Update OpenROAD ibex sources
         run: |
@@ -222,8 +218,6 @@ jobs:
       - name: Fetch Verilator
         run: |
           git clone https://github.com/verilator/verilator
-          # UDP changes commit
-          cd verilator && git checkout d0c4cc393869b5570e51ead2420dcc2ce60fe1b5
 
       - name: Build Verilator
         run: |
@@ -234,8 +228,8 @@ jobs:
 
       - name: Fetch OpenROAD-flow-scripts
         run: |
-          git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
-          cd OpenROAD-flow-scripts && git checkout f53fbce71af0e7965b3fa76396ff6d3e8121b6bb
+          git clone https://github.com/antmicro/OpenROAD-flow-scripts
+          cd OpenROAD-flow-scripts && git fetch && git checkout mgan/custom-hier-separator-and-dff-fix
 
       - name: Update OpenROAD ibex sources
         run: |
