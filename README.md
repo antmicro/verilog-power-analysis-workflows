@@ -218,7 +218,7 @@ Go to the synthesis results directory and then run the peak power script:
 <!-- name="execute-peak-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-python3 peak_power.py --base base_output --total total_output --csv power_analysis.csv --cycles 50
+python3 peak_power.py --base base_output --total total_output --csv power_analysis.csv
 ```
 
 This will visualize power consumption over time and output maximum encountered value:
@@ -272,7 +272,7 @@ Go to the synthesis results directory and then run the glitch power script:
 <!-- name="execute-glitch-power-script" -->
 ```
 cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-python3 peak_power.py --base base_output --total total_output --glitch glitch_output --csv power_analysis.csv --cycles 50
+python3 peak_power.py --base base_output --total total_output --glitch glitch_output --csv power_analysis.csv --cycles 75
 ```
 
 This will visualize power consumption over time with per clock cycle total/glitch power and output maximum encountered value:
