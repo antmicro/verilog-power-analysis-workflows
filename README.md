@@ -16,7 +16,7 @@ These instructions assumes that all required projects are located in the same di
 
 The following projects need to be cloned and built:
 
-- [Verilator](https://github.com/verilator/verilator) (tested on commit `d0c4cc39`). It can be built by going into the project directory and executing these commands:
+- [Verilator](https://github.com/verilator/verilator) (tested on commit `5b410e93`). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
@@ -31,7 +31,7 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD` (tested on commit `f53fbce`). To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from branch `mgan/custom-hier-separator-and-dff-fix` with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
