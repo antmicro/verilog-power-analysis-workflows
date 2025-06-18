@@ -8,11 +8,11 @@ Antmicro's demonstration of power analysis workflows with [Verilator](https://gi
 
 These workflows have been tested on Ubuntu 24.04 and Debian 12.
 
-To demonstrate workflows of power analysis with Verilator and OpenSTA, instructions below and a `ibex` example have been prepared.
+The following instructions demonstrate the power analysis workflows with Verilator and OpenSTA, using the `ibex` core as an example.
 
 ## Prerequisites
 
-These instructions assumes that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
+These instructions assume that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
 
 The following projects need to be cloned and built:
 
@@ -29,9 +29,9 @@ make -j $(nproc)
 export PATH=$PATH:$(pwd)/bin/
 ```
 
-Remember to add the Verilator binary directory `~/dev/verilator/bin/` to the `PATH` environmental variable.
+Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from branch `mgan/custom-hier-separator-and-dff-fix` with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from the `mgan/custom-hier-separator-and-dff-fix` branch with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
@@ -44,7 +44,7 @@ sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
-- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from branch `74949-glitch-power` in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
+- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from the `74949-glitch-power` branch in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
 <!-- name="build-trace-to-power" -->
 ```
@@ -56,7 +56,7 @@ export PATH=$PATH:$(pwd)/target/release/
 
 ### Process model sources with Yosys and OpenROAD
 
-For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route step in the `OpenROAD-flow-scripts` project directory. Example workflows uses the `asap7` platform. Copy design contents from `example` directory to `OpenROAD-flow-scripts/flow/designs/asap7/ibex/` and `OpenROAD-flow-scripts/flow/designs/src/ibex`:
+For power consumption report generation you will need to prepare simulated model sources for `Yosys` synthesis and `OpenROAD` place and route steps in the `OpenROAD-flow-scripts` project directory. The example workflow uses the `asap7` platform. Copy the design contents from  the `example` directory to `OpenROAD-flow-scripts/flow/designs/asap7/ibex/` and `OpenROAD-flow-scripts/flow/designs/src/ibex`:
 
 <!-- name="copy-model-sources" -->
 ```
@@ -67,7 +67,7 @@ mkdir -p OpenROAD-flow-scripts/flow/designs/src/ibex/
 cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
 ```
 
-Then go to the `OpenROAD-flow-scripts` project top directory and run the required synthesis, place and route steps:
+Then go to the `OpenROAD-flow-scripts` project top directory and run the required synthesis and place and route steps:
 
 <!-- name="run-synthesis-steps" -->
 ```
@@ -75,13 +75,13 @@ cd OpenROAD-flow-scripts
 make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
 ```
 
-Finally copy the result of synthesis to relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
+Finally, copy the result of synthesis to the relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
 
 ## Static power analysis workflow
 
-### Generating SAIF file from trace
+### Generating SAIF files from trace
 
-From the `example` directory, run verilation and compile the model to an executable with the SAIF trace flag enabled `--trace-saif` and then run a simulation with the generated binary:
+From the `example` directory, run verilation and compile the model to an executable with the SAIF trace flag enabled (`--trace-saif`) and then run a simulation with the generated binary:
 
 <!-- name="generate-saif-file" -->
 ```
@@ -96,9 +96,9 @@ verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trac
 
 This will generate the `sim.saif` file in the current directory with the SAIF trace output.
 
-### Generating power consumption report
+### Generating a power consumption report
 
-Copy previously generated SAIF file from simulation trace and `power.tcl` commands file to the synthesis result directory:
+Copy the SAIF file previously generated from the simulation trace and the `power.tcl` commands file to the synthesis result directory:
 
 <!-- name="copy-required-artifacts" -->
 ```
@@ -113,7 +113,7 @@ For liberty files paths simplicity, you can export the path to their directory a
 export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
 ```
 
-Go to the synthesis results directory and then run `openroad` with commands:
+Go to the synthesis results directory and then run `openroad` with the following commands:
 
 <!-- name="execute-openroad-commands" -->
 ```
@@ -138,7 +138,7 @@ read_saif -scope TOP/ibex_simple_system/u_top/u_ibex_top/u_ibex_core sim.saif
 report_power
 ```
 
-This will generate power consumption report that should look like this:
+This will generate a power consumption report that should look like this:
 
 ```
 Annotated 212 pin activities.
@@ -157,9 +157,9 @@ Total                  7.58e+00   1.89e+00   4.57e-08   9.47e+00 100.0%
 
 ## Peak and glitch power analysis workflow
 
-### Generating VCD file from trace
+### Generating VCD files from trace
 
-From the `example` directory, run verilation and compile the model to an executable with the trace flag enabled `--trace` and then run a simulation with the generated binary:
+From the `example` directory, run verilation and compile the model to an executable with the trace flag enabled (`--trace`) and then run a simulation with the generated binary:
 
 <!-- name="generate-vcd-file" -->
 ```
@@ -172,11 +172,11 @@ verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-par
 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
 ```
 
-This will generate the `sim.vcd` file in the current directory with the VCD trace output.
+This will generate a `sim.vcd` file in the current directory with the VCD trace output.
 
-### Processing VCD file to base per clock cycle power TCL scripts
+### Processing VCD files to base per clock cycle power TCL scripts
 
-To generate base per clock cycle power TCL scripts, which will be used to offset generated total and peak power consumption reports, use `trace2power` to process previously generated VCD file:
+To generate base per clock cycle power TCL scripts, which will be used to offset the generated total and peak power consumption reports, use `trace2power` to process the previously generated VCD file:
 
 <!-- name="process-empty-vcd-output" -->
 ```
@@ -184,9 +184,9 @@ cd example/
 trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --export-empty --output base_output sim.vcd
 ```
 
-### Processing VCD file to per clock cycle total power TCL scripts
+### Processing VCD files to per clock cycle total power TCL scripts
 
-To generate per clock cycle total power TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
+To generate per clock cycle total power TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process the previously generated VCD file:
 
 <!-- name="process-total-vcd-output" -->
 ```
@@ -195,9 +195,9 @@ mkdir -p total_output
 trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --output total_output sim.vcd
 ```
 
-### Generating peak power report
+### Generating a peak power report
 
-Copy previously generated TCL files with required scripts to the synthesis result directory:
+Copy the previously generated TCL files with the required scripts to the synthesis result directory:
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
@@ -248,9 +248,9 @@ mkdir -p glitch_output
 trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --per-clock-cycle --only-glitches --clock-name clk_sys --output glitch_output sim.vcd
 ```
 
-### Generating peak power with glitches report
+### Generating a peak power with glitches report
 
-Copy previously generated TCL files with required scripts to the synthesis result directory:
+Copy the previously generated TCL files with the required scripts to the synthesis result directory:
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
@@ -275,7 +275,7 @@ cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 python3 peak_power.py --base base_output --total total_output --glitch glitch_output --csv power_analysis.csv --cycles 75
 ```
 
-This will visualize power consumption over time with per clock cycle total/glitch power and output maximum encountered value:
+This will visualize power consumption over time with per clock cycle total/glitch power and output the maximum encountered value:
 
 ```
 ...
