@@ -1,0 +1,12 @@
+[submodule "ext/asap7sc7p5t_28"]
+	path = ext/asap7sc7p5t_28
+	url = git@github.com:The-OpenROAD-Project/asap7sc7p5t_28.git
+[submodule "ext/verilator"]
+	path = ext/verilator
+	url = git@github.com:verilator/verilator.git
+[submodule "ext/trace2power"]
+	path = ext/trace2power
+	url = git@github.com:antmicro/trace2power.git
+[submodule "ext/OpenROAD-flow-scripts"]
+	path = ext/OpenROAD-flow-scripts
+	url = git@github.com:antmicro/OpenROAD-flow-scripts.git

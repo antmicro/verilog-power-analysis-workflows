@@ -1,0 +1,4 @@
+out/
+base_output.tcl
+sim.vcd
+verilog/adder_core_synth.v

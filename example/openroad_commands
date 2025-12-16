@@ -1,0 +1,18 @@
+suppress_message STA 1212
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
+read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
+
+read_lef $::env(LEF_DIR)/asap7_tech_1x_201209.lef
+read_lef $::env(LEF_DIR)/asap7sc7p5t_28_R_1x_220121a.lef
+read_verilog 1_2_yosys.v
+link_design ibex_core
+read_sdc 1_synth.sdc
+
+source base_output.tcl
+set_pin_activity_and_duty
+report_power > power_estimation.txt
+report_activity_annotation -report_unannotated -report_annotated
+exit

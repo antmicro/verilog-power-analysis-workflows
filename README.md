@@ -1,6 +1,6 @@
 # Power analysis workflows
 
-Copyright (c) 2025 [Antmicro](https://www.antmicro.com)
+Copyright (c) 2025-2026 [Antmicro](https://www.antmicro.com)
 
 Antmicro's demonstration of power analysis workflows with [Verilator](https://github.com/verilator/verilator), [OpenSTA](https://github.com/The-OpenROAD-Project/OpenSTA) and [trace2power](https://github.com/antmicro/trace2power).
 
@@ -20,7 +20,7 @@ The following projects need to be cloned and built:
 
 <!-- name="build-verilator" -->
 ```
-cd verilator
+cd ext/verilator
 
 autoconf
 ./configure --prefix $(pwd)
@@ -35,9 +35,8 @@ Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PA
 
 <!-- name="build-openroad" -->
 ```
-cd OpenROAD-flow-scripts
+cd ext/OpenROAD-flow-scripts
 
-git submodule update --init --recursive tools/yosys tools/OpenROAD
 sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 ./build_openroad.sh -t $(nproc) --local
 
@@ -48,7 +47,7 @@ export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 
 <!-- name="build-trace-to-power" -->
 ```
-cd trace2power
+cd ext/trace2power
 cargo build --release
 
 export PATH=$PATH:$(pwd)/target/release/
@@ -60,18 +59,18 @@ For power consumption report generation you will need to prepare simulated model
 
 <!-- name="copy-model-sources" -->
 ```
-mkdir -p OpenROAD-flow-scripts/flow/designs/asap7/ibex/
-cp example/design/* OpenROAD-flow-scripts/flow/designs/asap7/ibex/
+mkdir -p ext/OpenROAD-flow-scripts/flow/designs/asap7/ibex/
+cp example/design/* ext/OpenROAD-flow-scripts/flow/designs/asap7/ibex/
 
-mkdir -p OpenROAD-flow-scripts/flow/designs/src/ibex/
-cp example/verilog/ibex_core/* OpenROAD-flow-scripts/flow/designs/src/ibex/
+mkdir -p ext/OpenROAD-flow-scripts/flow/designs/src/ibex/
+cp example/verilog/ibex_core/* ext/OpenROAD-flow-scripts/flow/designs/src/ibex/
 ```
 
 Then go to the `OpenROAD-flow-scripts` project top directory and run the required synthesis and place and route steps:
 
 <!-- name="run-synthesis-steps" -->
 ```
-cd OpenROAD-flow-scripts
+cd ext/OpenROAD-flow-scripts
 make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
 ```
 
@@ -85,7 +84,7 @@ From the `example` directory, run verilation and compile the model to an executa
 
 <!-- name="generate-saif-file" -->
 ```
-export CELL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog/
+export CELL_SOURCES=$(pwd)/ext/asap7sc7p5t_28/Verilog/
 
 cd example/
 verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
@@ -102,22 +101,22 @@ Copy the SAIF file previously generated from the simulation trace and the `power
 
 <!-- name="copy-required-artifacts" -->
 ```
-cp example/sim.saif OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp saif_example/power.tcl OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp example/sim.saif ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp saif_example/power.tcl ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
 
 <!-- name="export-liberty-path" -->
 ```
-export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+export LIB_DIR=$(pwd)/ext/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
 ```
 
 Go to the synthesis results directory and then run `openroad` with the following commands:
 
 <!-- name="execute-openroad-commands" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cd ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 openroad power.tcl -exit
 ```
 
@@ -163,7 +162,7 @@ From the `example` directory, run verilation and compile the model to an executa
 
 <!-- name="generate-vcd-file" -->
 ```
-export CELL_SOURCES=$(pwd)/asap7sc7p5t_28/Verilog/
+export CELL_SOURCES=$(pwd)/ext/asap7sc7p5t_28/Verilog/
 
 cd example/
 verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-params --trace-max-array 1024 \
@@ -201,23 +200,23 @@ Copy the previously generated TCL files with the required scripts to the synthes
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
-cp -r example/total_output OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp example/base_output OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp -r example/total_output ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp example/base_output ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp peak_power_example/peak_power.py ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
 
 <!-- name="export-liberty-path" -->
 ```
-export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+export LIB_DIR=$(pwd)/ext/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
 ```
 
 Go to the synthesis results directory and then run the peak power script:
 
 <!-- name="execute-peak-power-script" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cd ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 python3 peak_power.py --base base_output --total total_output --csv power_analysis.csv
 ```
 
@@ -254,24 +253,24 @@ Copy the previously generated TCL files with the required scripts to the synthes
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
-cp -r example/total_output OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp -r example/glitch_output OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp example/base_output OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-cp peak_power_example/peak_power.py OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp -r example/total_output ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp -r example/glitch_output ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp example/base_output ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cp peak_power_example/peak_power.py ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 ```
 
 For liberty files paths simplicity, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it will be:
 
 <!-- name="export-liberty-path" -->
 ```
-export LIB_DIR=$(pwd)/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+export LIB_DIR=$(pwd)/ext/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
 ```
 
 Go to the synthesis results directory and then run the glitch power script:
 
 <!-- name="execute-glitch-power-script" -->
 ```
-cd OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+cd ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
 python3 peak_power.py --base base_output --total total_output --glitch glitch_output --csv power_analysis.csv --cycles 75
 ```
 
@@ -290,3 +289,4 @@ Processing clock cycle #227
 Processing clock cycle #228
 Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
+
