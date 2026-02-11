@@ -14,9 +14,15 @@ The following instructions demonstrate the power analysis workflows with Verilat
 
 These instructions assume that all required projects are located in the same directory. Usually all commands from the snippets expect you to start executing them from the top directory.
 
-The following projects need to be cloned and built:
+Clone all submodules with:
 
-- [Verilator](https://github.com/verilator/verilator) (tested on commit `5b410e93`). It can be built by going into the project directory and executing these commands:
+```bash
+git submodule update --init --recursive .
+```
+
+The following projects need to be built:
+
+- [Verilator](https://github.com/verilator/verilator) (tested on commit [1e5a6901c8839f3403ccee131d5a4f2c30027860](https://github.com/verilator/verilator/commit/1e5a6901c8839f3403ccee131d5a4f2c30027860)). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
@@ -31,7 +37,7 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from the `mgan/custom-hier-separator-and-dff-fix` branch with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts). To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
@@ -43,7 +49,7 @@ sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
-- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from the `74949-glitch-power` branch in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
+- [trace2power](https://github.com/antmicro/trace2power). To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
 <!-- name="build-trace-to-power" -->
 ```
@@ -290,3 +296,58 @@ Processing clock cycle #228
 Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
 
+## Scoped power analysis
+
+As of [v0.4.3](https://crates.io/crates/trace2power/0.4.3), `trace2power` supports scoped power analysis with `--limit-power-scope`.
+
+Example flow consists of a main `Makefile` in the root of this repository with power estimation flow definitionsan and configuration files `power_estimation.mk` for each design in `example` and `example_adder` directories respectively.
+
+Steps:
+
+1. Synthesis with Yosys ORFS scripts.
+2. [Naja](https://github.com/najaeda/naja) Verilog cleaning of redundant leafs.
+3. Verilator simulation.
+4. Power analysis.
+
+### `ibex` design
+
+Scoped power estimation:
+<!-- name="execute-ibex-power-scoped" -->
+```bash
+make -f example/power_estimation.mk -f Makefile power_scoped
+```
+
+Power estimation of the whole design:
+<!-- name="execute-ibex-power-full" -->
+```bash
+make -f example/power_estimation.mk -f Makefile power_full
+```
+
+Power estimation using OpenSTA instances mode:
+<!-- name="execute-ibex-power-instances" -->
+```bash
+make -f example/power_estimation.mk -f Makefile power_instances
+```
+
+
+### `adder` design
+
+Minimal design to investigate effect naja clean and power estimation.
+
+Scoped power estimation:
+<!-- name="execute-adder-power-scoped" -->
+```bash
+make -f example_adder/power_estimation.mk -f Makefile power_base
+```
+
+Power estimation of the whole design:
+<!-- name="execute-adder-power-full" -->
+```bash
+make -f example_adder/power_estimation.mk -f Makefile power_full
+```
+
+Power estimation using OpenSTA instances mode:
+<!-- name="execute-adder-power-instances" -->
+```bash
+make -f example_adder/power_estimation.mk -f Makefile power_instances
+```

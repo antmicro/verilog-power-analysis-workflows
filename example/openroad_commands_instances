@@ -7,12 +7,11 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
 read_lef $::env(LEF_DIR)/asap7_tech_1x_201209.lef
 read_lef $::env(LEF_DIR)/asap7sc7p5t_28_R_1x_220121a.lef
-read_verilog 1_2_yosys.v
-link_design ibex_core
+read_verilog $::env(SYNTH_CLEAN)
+link_design $::env(SYNTH_DESIGN_NAME)
 read_sdc 1_synth.sdc
-read_vcd -scope TOP/ibex_simple_system/u_top/u_ibex_top/u_ibex_core $::env(VCD_FILE)
+read_vcd -scope $::env(SYNTH_VCD_SCOPE) $::env(VCD_FILE)
 
-
-report_power -instances [get_cells *]
-#report_activity_annotation -report_unannotated -report_annotated
+report_power -instances [get_cells *] > $::env(POWER_ESTIMATION)
+report_activity_annotation -report_unannotated -report_annotated
 exit

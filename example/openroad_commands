@@ -7,12 +7,19 @@ read_liberty $::env(LIB_DIR)/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib
 
 read_lef $::env(LEF_DIR)/asap7_tech_1x_201209.lef
 read_lef $::env(LEF_DIR)/asap7sc7p5t_28_R_1x_220121a.lef
-read_verilog 1_2_yosys.v
-link_design ibex_core
+read_verilog $::env(SYNTH_CLEAN)
+link_design $::env(SYNTH_DESIGN_NAME)
 read_sdc 1_synth.sdc
 
-source base_output.tcl
+# FIXME currently trace2power emits a lot of incorrect signal names
+# leading to misses, disabling warning for now.
+suppress_message STA 363
+suppress_message STA 366
+suppress_message STA 310
+
+source $::env(BASE_TCL)
 set_pin_activity_and_duty
-report_power > power_estimation.txt
-report_activity_annotation -report_unannotated -report_annotated
+report_power > $::env(POWER_ESTIMATION)
+#report_activity_annotation -report_unannotated -report_annotated
+
 exit

@@ -15,121 +15,156 @@
 .SUFFIXES:
 MAKEFLAGS += -r
 
-# -----------------------------
-# User-configurable variables
-# -----------------------------
-ORFS ?= ext/OpenROAD-flow-scripts
-CELL_REPO ?= ext/asap7sc7p5t_28
-VERILATOR_REPO ?= ext/verilator
-TRACE2POWER_REPO ?= ext/trace2power
+## Requires design-specific variable declarations found in `power_estimation.mk`
+## For details refer to README
 
-OPENROAD_BIN ?= $(ORFS)/tools/install/OpenROAD/bin
-TRACE2POWER_TOP_SCOPE ?= TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core
-TRACE2POWER_POWER_SCOPE ?= '$(TRACE2POWER_TOP_SCOPE).cs_registers_i'
-TEST_DIR := $(PWD)/example
-VERILATOR_OUT := $(TEST_DIR)/out/Vibex_simple_system
-BASE_TCL := $(TEST_DIR)/base_output.tcl
 
-RESULTS_DIR := $(ORFS)/flow/results/asap7/ibex/base
+# ---------------------------------------
+# Directories to used submodules
+# ---------------------------------------
 
+CELL_REPO ?= $(PWD)/ext/asap7sc7p5t_28
+ORFS ?= $(PWD)/ext/OpenROAD-flow-scripts
+TRACE2POWER_REPO ?= $(PWD)/ext/trace2power
+VERILATOR_ROOT ?= $(PWD)/ext/verilator
+
+
+# -------------------------------------
+# Executables required for workflow run
+# -------------------------------------
 
 # Verilator
-export PATH := $(PATH):$(VERILATOR_REPO)/bin
+export PATH := $(PATH):$(VERILATOR_ROOT)/bin
 # trace2power
 export PATH := $(PATH):$(TRACE2POWER_REPO)/target/release
 # OpenROAD
-export PATH := $(PATH):$(OPENROAD_BIN)
-# sta
-export PATH := $(PATH):$(ORFS)/tools/OpenROAD/build/src/sta
+export PATH := $(PATH):$(ORFS)/tools/install/OpenROAD/bin
 
-export CELL_SOURCES := $(PWD)/$(CELL_REPO)/Verilog
-export LIB_DIR := $(ORFS)/flow/platforms/asap7/lib/NLDM/
-export LEF_DIR := $(ORFS)/flow/platforms/asap7/lef
-export VCD_FILE := $(TEST_DIR)/sim.vcd
-export SYNTH_FILE := $(TEST_DIR)/ibex_core_synth.v
+
+# ---------------------------------------
+# Environment variables needed in scripts
+# ---------------------------------------
+
+export BASE_TCL = $(TEST_DIR)/base_output.tcl
+export CELL_SOURCES = $(PWD)/$(CELL_REPO)/Verilog
+export LEF_DIR = $(ORFS)/flow/platforms/asap7/lef
+export LIB_DIR = $(ORFS)/flow/platforms/asap7/lib/NLDM
+export SYNTH_CLEAN = $(TEST_DIR)/verilog/synth_clean.v
+export VCD_FILE = $(TEST_DIR)/sim.vcd
+
+
+# ---------------------------------------
+# Result files
+# ---------------------------------------
+
+POWER_ESTIMATION_FULL = $(RESULTS_DIR)/power_estimation_full.txt
+POWER_ESTIMATION_INSTANCES = $(RESULTS_DIR)/power_estimation_instances.txt
+POWER_ESTIMATION_SCOPED = $(RESULTS_DIR)/power_estimation_scoped.txt
+SYNTH_DIRTY = $(RESULTS_DIR)/1_2_yosys.v
+
 
 
 # -----------------------------
 # Top-level phony targets
 # -----------------------------
-.PHONY: all synthesis clean power_base \
-    copy_designs simulate power_full sta_full
 
-all: synthesis simulate power_base sta
+.PHONY: all synthesis clean power_scoped \
+    simulate power_full power_instances
 
-copy_designs: $(TEST_DIR)/design/* $(TEST_DIR)/verilog/ibex_core/*
-	rm -rf $(ORFS)/flow/designs/asap7/ibex/
-	mkdir -p $(ORFS)/flow/designs/asap7/ibex/
-	cp $(TEST_DIR)/design/* $(ORFS)/flow/designs/asap7/ibex/
-	rm -rf $(ORFS)/flow/designs/src/ibex/
-	mkdir -p $(ORFS)/flow/designs/src/ibex/
-	cp $(TEST_DIR)/verilog/ibex_core/* $(ORFS)/flow/designs/src/ibex/
-
-
-synthesis: $(RESULTS_DIR)/1_2_yosys.v
-.PRECIOUS: $(RESULTS_DIR)/1_2_yosys.v
-$(RESULTS_DIR)/1_2_yosys.v: copy_designs
-	cd $(ORFS) && make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk synth || true
-	cp -v $@ $(SYNTH_FILE)
+all: synthesis simulate power_scoped power_full power_instances
 
 
 # -----------------------------
-# Build + run simulation
+# Synthesis
+# -----------------------------
+
+# For power consumption report generation you will need to prepare simulated
+# model sources for `Yosys` synthesis and `OpenROAD` place and route steps in
+# the `OpenROAD-flow-scripts` project directory.
+#
+# The example workflow uses the `asap7` platform.
+#
+# Copy the design contents from the example directory to OpenROAD-flow-scripts
+# design directory.
+
+synthesis: $(SYNTH_CLEAN)
+.PRECIOUS: $(SYNTH_DIRTY) $(SYNTH_CLEAN)
+$(SYNTH_DIRTY): $(TEST_DIR)/design/* $(DESIGN_SOURCES)/*
+	rm -rf $(FLOW_DESIGN_DIR)
+	mkdir -p $(FLOW_DESIGN_DIR)
+	cp $(TEST_DIR)/design/* $(FLOW_DESIGN_DIR)/
+	rm -rf $(FLOW_SRC_DIR)
+	mkdir -p $(FLOW_SRC_DIR)
+	cp $(DESIGN_SOURCES)/* $(FLOW_SRC_DIR)/
+	cd $(ORFS) && make -C flow DESIGN_CONFIG=$(FLOW_DESIGN_CONFIG) synth
+
+
+
+# -----------------------------
+# Cleaning with najeda clean
+# -----------------------------
+
+$(SYNTH_CLEAN): $(SYNTH_DIRTY)
+	# TODO emit lib files with ORFS print-LIB_FILES and feed them to naja
+	./scripts/naja_clean.py \
+		--libs '/home/bchmiel/Documents/@projects/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib' \
+		--vars naja_asap7_stdcell_config.yaml \
+		$(SYNTH_DIRTY) \
+		--output $(SYNTH_CLEAN)
+
+# -----------------------------
+# Verilation and simulation run
 # -----------------------------
 
 simulate: $(VCD_FILE)
 .PRECIOUS: $(VCD_FILE)
-$(VERILATOR_OUT): synthesis $(TEST_DIR)/post_synthesis.vc
+$(VERILATOR_OUT): $(SYNTH_CLEAN) $(TEST_DIR)/post_synthesis.vc
 	cd $(TEST_DIR) && \
-	verilator --build --exe -f post_synthesis.vc \
-		--public-flat-rw \
-		--x-assign 0 \
-		--x-initial 0 \
-		--trace-underscore \
-		--trace-vcd --trace-structs --trace-params --trace-max-array 1024 \
-		-CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=ibex_simple_system" \
-		-LDFLAGS "-pthread -lutil -lelf" --unroll-count 72 --timing --timescale 1ns/10ps \
-		-Wno-MULTIDRIVEN -Wno-WIDTHEXPAND -Wno-SPECIFYIGN -Wno-WIDTHTRUNC -Wno-fatal \
-		-Wno-UNOPTFLAT -Wno-PINMISSING \
-		--build-jobs $$(nproc)
+	verilator $(VERILATOR_COMMANDLINE) $(SYNTH_CLEAN) -f $(TEST_DIR)/post_synthesis.vc
 
 $(VCD_FILE): $(VERILATOR_OUT)
-	cd $(TEST_DIR) && timeout 5 ./out/Vibex_simple_system -t \
-		--meminit=ram,./hello_test/hello_test.elf || true
+	cd $(TEST_DIR) && timeout 5 $(VERILATOR_OUT) $(SIMULATION_ARGS) || true
 
 
-# ========================================
-# Power analysis
-# ========================================
+# -----------------------------
+# Scoped power analysis
+# -----------------------------
 
-power_base: $(VCD_FILE)
+power_scoped: $(POWER_ESTIMATION_SCOPED)
+$(POWER_ESTIMATION_SCOPED): $(VCD_FILE)
 	trace2power --clk-freq 200000000  \
 		--limit-scope $(TRACE2POWER_TOP_SCOPE) \
 		--limit-scope-power $(TRACE2POWER_POWER_SCOPE) \
 		--input-ports-activity \
 		--output $(BASE_TCL) $(VCD_FILE)
-	mkdir -pv $(RESULTS_DIR)
-	cp -v $(BASE_TCL) $(RESULTS_DIR)/
+	cd $(RESULTS_DIR) && POWER_ESTIMATION=$@ openroad $(TEST_DIR)/openroad_commands
+	cat $@
 
-sta: power_base $(RESULTS_DIR) $(BASE_TCL)
-	cd $(RESULTS_DIR) && openroad $(TEST_DIR)/openroad_commands
-	cat $(RESULTS_DIR)/power_estimation.txt
 
-power_full: $(VCD_FILE)
+# -----------------------------
+# Full power analysis
+# -----------------------------
+
+power_full: $(POWER_ESTIMATION_FULL)
+$(POWER_ESTIMATION_FULL): $(VCD_FILE)
 	trace2power --clk-freq 200000000 \
 	    --limit-scope $(TRACE2POWER_TOP_SCOPE) \
 	    --input-ports-activity \
 	    --output $(BASE_TCL) $(VCD_FILE)
-	mkdir -pv $(RESULTS_DIR)
-	cp -v $(BASE_TCL) $(RESULTS_DIR)/
+	cd $(RESULTS_DIR) && POWER_ESTIMATION=$@ openroad $(TEST_DIR)/openroad_commands
+	cat $@
 
-sta_full: power_full $(RESULTS_DIR) $(BASE_TCL)
-	cd $(RESULTS_DIR) && openroad $(TEST_DIR)/openroad_commands
-	cat $(RESULTS_DIR)/power_estimation.txt
 
-sta_instances: $(VCD_FILE)
-	cd $(RESULTS_DIR) && openroad $(TEST_DIR)/openroad_commands_instances
+# -------------------------------------
+# Power analysis with OpenSTA instances
+# -------------------------------------
+
+power_instances: $(POWER_ESTIMATION_INSTANCES)
+$(POWER_ESTIMATION_INSTANCES): $(VCD_FILE)
+	cd $(RESULTS_DIR) && POWER_ESTIMATION=$@ openroad $(TEST_DIR)/openroad_commands_instances
+	cat $@
+	python3 scripts/parse_report_power_instances.py $@
 
 clean:
-	rm -rf $(VERILATOR_OUT) $(TEST_DIR)/out $(VCD_FILE) $(BASE_TCL) $(RESULTS_DIR) $(SYNTH_FILE)
+	rm -rf $(VERILATOR_OUT) $(TEST_DIR)/out $(VCD_FILE) $(BASE_TCL) $(RESULTS_DIR) $(SYNTH_CLEAN) $(SYNTH_DIRTY)
 

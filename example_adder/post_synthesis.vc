@@ -11,5 +11,4 @@ $CELL_SOURCES/asap7sc7p5t_AO_RVT_TT_201020.v
 $CELL_SOURCES/asap7sc7p5t_INVBUF_RVT_TT_201020.v
 $CELL_SOURCES/asap7sc7p5t_SEQ_RVT_TT_220101.v
 $CELL_SOURCES/asap7sc7p5t_SIMPLE_RVT_TT_201020.v
-verilog/adder_core_synth.v
 verilog/tb.sv

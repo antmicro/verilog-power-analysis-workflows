@@ -1,4 +1,5 @@
-out/
 base_output.tcl
+ibex_simple_system.log
+out/
 sim.vcd
 verilog/synth_clean.v
