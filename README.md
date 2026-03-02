@@ -44,7 +44,7 @@ Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PA
 cd ext/OpenROAD-flow-scripts
 
 sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
-./build_openroad.sh -t $(nproc) --local
+./build_openroad.sh -t $(nproc) --local --openroad-args "-DBUILD_GUI=OFF"
 
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
