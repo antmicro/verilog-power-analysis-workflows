@@ -258,3 +258,77 @@ jobs:
             ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
             example/sim.vcd
             example/ibex_simple_system.log
+
+  scoped-power-analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    name: Scoped power analysis flow | ${{ matrix.os }}
+    env:
+      CI_BUILD_STAGE_NAME: build
+      CI_RUNS_ON: ${{ matrix.os }}
+      CACHE_BASE_KEY: build-${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
+          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+      - name: Build Verilator
+        run: |
+          tuttest README.md build-verilator | bash -
+
+      - name: Build OpenROAD
+        run: |
+          tuttest README.md build-openroad | bash -
+
+      - name: Build trace2power
+        run: |
+          source $HOME/.cargo/env
+
+          tuttest README.md build-trace-to-power | bash -
+
+      - name: Update OpenROAD ibex sources
+        run: |
+          tuttest README.md copy-model-sources | bash -
+
+      - name: Run synth and route
+        run: |
+          tuttest README.md run-synthesis-steps | bash -
+
+      - name: Copy synthesized model to the example directory
+        run: |
+          tuttest README.md copy-synthesized-netlist-scoped | bash -
+
+      - name: Generate VCD file from simulation trace
+        run: |
+          export PATH=$PATH:$(pwd)/ext/verilator/bin/
+          tuttest README.md generate-vcd-file-scoped | bash -
+
+      - name: Generate scoped power TCL from VCD with trace2power
+        run: |
+          export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
+          tuttest README.md generate-scoped-power-tcl | bash -
+
+      - name: Generate scoped power consumption report
+        run: |
+          export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+          tuttest README.md copy-scoped-power-artifacts,export-liberty-path,execute-scoped-openroad-commands | bash -
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: scoped power analysis report
+          path: |
+            ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+            example/sim.vcd
+            example/ibex_simple_system.log

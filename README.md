@@ -173,9 +173,9 @@ verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-par
 
 This will generate a `sim.vcd` file in the current directory with the VCD trace output.
 
-### Processing VCD files to base per clock cycle power TCL scripts
+### Processing VCD files to base per clock cycle power Tcl scripts
 
-To generate base per clock cycle power TCL scripts, which will be used to offset the generated total and peak power consumption reports, use `trace2power` to process the previously generated VCD file:
+To generate base per clock cycle power Tcl scripts, which will be used to offset the generated total and peak power consumption reports, use `trace2power` to process the previously generated VCD file:
 
 <!-- name="process-empty-vcd-output" -->
 ```
@@ -183,9 +183,9 @@ cd example/
 trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core --remove-virtual-pins --export-empty --output base_output sim.vcd
 ```
 
-### Processing VCD files to per clock cycle total power TCL scripts
+### Processing VCD files to per clock cycle total power Tcl scripts
 
-To generate per clock cycle total power TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process the previously generated VCD file:
+To generate per clock cycle total power Tcl scripts, which will be used to generate power consumption reports, use `trace2power` to process the previously generated VCD file:
 
 <!-- name="process-total-vcd-output" -->
 ```
@@ -196,7 +196,7 @@ trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_s
 
 ### Generating a peak power report
 
-Copy the previously generated TCL files with the required scripts to the synthesis result directory:
+Copy the previously generated Tcl files with the required scripts to the synthesis result directory:
 
 <!-- name="copy-required-peak-power-artifacts" -->
 ```
@@ -236,9 +236,9 @@ Processing clock cycle #228
 Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
 
-### Processing VCD file to per clock cycle glitch power TCL scripts
+### Processing VCD file to per clock cycle glitch power Tcl scripts
 
-To generate per clock cycle glitch TCL scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
+To generate per clock cycle glitch Tcl scripts, which will be used to generate power consumption reports, use `trace2power` to process previously generated VCD file:
 
 <!-- name="process-glitch-vcd-output" -->
 ```
@@ -249,7 +249,7 @@ trace2power --clk-freq 200000000 --top ibex_core --limit-scope TOP.ibex_simple_s
 
 ### Generating a peak power with glitches report
 
-Copy the previously generated TCL files with the required scripts to the synthesis result directory:
+Copy the previously generated Tcl files with the required scripts to the synthesis result directory:
 
 <!-- name="copy-required-glitch-power-artifacts" -->
 ```
@@ -290,3 +290,95 @@ Processing clock cycle #228
 Maximum power consumption of a single clock cycle is 9.210000047600001 Watts and occurred in clock cycle #180
 ```
 
+## Scoped power estimation workflow
+
+Instead of reporting power for a whole design, `trace2power` can limit activity annotation to a single instance with `--limit-scope-power`, so `report_power` reflects only that instance's contribution. This is demonstrated by scoping the `ibex` example down to its `cs_registers_i` submodule.
+
+### Processing model sources with Yosys and OpenROAD
+
+Copy the design contents from the `example` directory to `OpenROAD-flow-scripts/flow/designs/asap7/ibex/` and `OpenROAD-flow-scripts/flow/designs/src/ibex`:
+
+<!-- name="copy-model-sources" -->
+```
+mkdir -p ext/OpenROAD-flow-scripts/flow/designs/asap7/ibex/
+cp example/design/* ext/OpenROAD-flow-scripts/flow/designs/asap7/ibex/
+
+mkdir -p ext/OpenROAD-flow-scripts/flow/designs/src/ibex/
+cp example/verilog/ibex_core/* ext/OpenROAD-flow-scripts/flow/designs/src/ibex/
+```
+
+Then go to the `OpenROAD-flow-scripts` project top directory and run the required synthesis and place and route steps:
+
+<!-- name="run-synthesis-steps" -->
+```
+cd ext/OpenROAD-flow-scripts
+make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
+```
+
+Finally, copy the result of synthesis to the relevant example directory:
+
+<!-- name="copy-synthesized-netlist-scoped" -->
+```
+cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
+```
+
+### Generating a VCD file from trace
+
+From the `example` directory, build the model to an executable with the VCD trace flags enabled and run a simulation with the generated binary:
+
+<!-- name="generate-vcd-file-scoped" -->
+```
+export CELL_SOURCES=$(pwd)/ext/asap7sc7p5t_28/Verilog/
+
+cd example/
+verilator --build --exe -f post_synthesis.vc \
+    --public-flat-rw --x-assign 0 --x-initial 0 --trace-underscore \
+    --trace-vcd --trace-structs --trace-params --trace-max-array 1024 \
+    -CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=ibex_simple_system" \
+    -LDFLAGS "-pthread -lutil -lelf" --unroll-count 72 --timing --timescale 1ns/10ps \
+    -Wno-MULTIDRIVEN -Wno-WIDTHEXPAND -Wno-SPECIFYIGN -Wno-WIDTHTRUNC -Wno-fatal \
+    -Wno-UNOPTFLAT -Wno-PINMISSING \
+    --build-jobs $(nproc)
+timeout 5 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf || true
+```
+
+This will generate a `sim.vcd` file in the current directory with the VCD trace output.
+
+### Generating a scoped power consumption report
+
+Use `trace2power` to process the generated VCD file, limiting power annotation to the `cs_registers_i` instance with `--limit-scope-power` while still annotating input port activity for the whole `u_ibex_core` scope:
+
+<!-- name="generate-scoped-power-tcl" -->
+```
+cd example/
+trace2power --clk-freq 200000000 \
+    --limit-scope TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core \
+    --limit-scope-power TOP.ibex_simple_system.u_top.u_ibex_top.u_ibex_core.cs_registers_i \
+    --input-ports-activity --output base_output.tcl sim.vcd
+```
+
+Copy the generated Tcl file to the synthesis result directory:
+
+<!-- name="copy-scoped-power-artifacts" -->
+```
+cp example/base_output.tcl ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+```
+
+To simplify the Liberty file paths, you can export the path to their directory as the `LIB_DIR` environmental variable. In this example it would be:
+
+<!-- name="export-liberty-path" -->
+```
+export LIB_DIR=$(pwd)/ext/OpenROAD-flow-scripts/flow/platforms/asap7/lib/NLDM/
+```
+
+Go to the synthesis results directory and then run `openroad` with the `openroad_commands` script, which reads the liberty files, the placed and routed design database (`5_route.odb`), and the scoped `base_output.tcl` activity, then reports power for the whole design (annotated only with `cs_registers_i`'s activity):
+
+<!-- name="execute-scoped-openroad-commands" -->
+```
+export TEST_DIR=$(pwd)/example
+cd ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+openroad $TEST_DIR/openroad_commands -exit
+cat power_estimation.txt
+```
+
+This will generate a power consumption report in the same format as the static workflow above, but with internal/switching power reflecting only `cs_registers_i`'s annotated activity.
