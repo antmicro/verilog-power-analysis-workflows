@@ -16,7 +16,7 @@ These instructions assume that all required projects are located in the same dir
 
 The following projects need to be cloned and built:
 
-- [Verilator](https://github.com/verilator/verilator) (tested on commit `5b410e93`). It can be built by going into the project directory and executing these commands:
+- [Verilator](https://github.com/verilator/verilator) (tested on commit `38ae4e6`). It can be built by going into the project directory and executing these commands:
 
 <!-- name="build-verilator" -->
 ```
@@ -31,7 +31,7 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from the `mgan/custom-hier-separator-and-dff-fix` branch with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD` (tested on commit `0e196c8`). To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
@@ -43,7 +43,7 @@ sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
-- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from the `74949-glitch-power` branch in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
+- [trace2power](https://github.com/antmicro/trace2power) (tested on commit `9c2dc78`). To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
 <!-- name="build-trace-to-power" -->
 ```
@@ -90,7 +90,7 @@ cd example/
 verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
     -CFLAGS "-std=c++14 -Wall -DVM_TRACE_FMT_SAIF -DTOPLEVEL_NAME=ibex_simple_system -g" \
     -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
-./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+timeout 5 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf || true
 ```
 
 This will generate the `sim.saif` file in the current directory with the SAIF trace output.
@@ -168,7 +168,11 @@ cd example/
 verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-params --trace-max-array 1024 \
     -CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=ibex_simple_system -g" \
     -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
-./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+timeout 300 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+status=$?
+if [ "$status" -eq 124 ]; then
+    echo "The simulation was interrupted because the time limit was exceeded."
+fi
 ```
 
 This will generate a `sim.vcd` file in the current directory with the VCD trace output.
@@ -339,7 +343,11 @@ verilator --build --exe -f post_synthesis.vc \
     -Wno-MULTIDRIVEN -Wno-WIDTHEXPAND -Wno-SPECIFYIGN -Wno-WIDTHTRUNC -Wno-fatal \
     -Wno-UNOPTFLAT -Wno-PINMISSING \
     --build-jobs $(nproc)
-timeout 5 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf || true
+timeout 300 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+status=$?
+if [ "$status" -eq 124 ]; then
+    echo "The simulation was interrupted because the time limit was exceeded."
+fi
 ```
 
 This will generate a `sim.vcd` file in the current directory with the VCD trace output.

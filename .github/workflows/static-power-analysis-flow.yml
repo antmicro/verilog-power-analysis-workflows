@@ -80,6 +80,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
+        if: ${{ !cancelled() }}
         with:
           name: static power analysis report
           path: |
@@ -163,6 +164,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
+        if: ${{ !cancelled() }}
         with:
           name: peak power analysis report
           path: |
@@ -252,6 +254,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
+        if: ${{ !cancelled() }}
         with:
           name: peak power with glitches analysis report
           path: |
@@ -326,6 +329,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
+        if: ${{ !cancelled() }}
         with:
           name: scoped power analysis report
           path: |
