@@ -52,7 +52,7 @@ $(TEST_DIR)/verilog/adder_core_synth.v: $(TEST_DIR)/design/* $(TEST_DIR)/verilog
 	mkdir -p $(ORFS)/flow/designs/src/adder/
 	cp $(TEST_DIR)/verilog/adder_core/* $(ORFS)/flow/designs/src/adder/
 	cd $(ORFS) && make -C flow DESIGN_CONFIG=designs/asap7/adder/config.mk synth
-	cp -v $(RESULTS_DIR)/1_synth.v $(TEST_DIR)/verilog/adder_core_synth.v
+	cp -v $(RESULTS_DIR)/1_2_yosys.v $(TEST_DIR)/verilog/adder_core_synth.v
 
 
 # -----------------------------

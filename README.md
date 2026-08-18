@@ -31,7 +31,7 @@ export PATH=$PATH:$(pwd)/bin/
 
 Remember to add the `~/dev/verilator/bin/` Verilator binary directory to the `PATH` environmental variable.
 
-- [OpenROAD-flow-scripts](https://github.com/antmicro/OpenROAD-flow-scripts) from the `mgan/custom-hier-separator-and-dff-fix` branch with `Yosys` and `OpenROAD`. To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
+- [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts) with `Yosys` and `OpenROAD` (tested on commit `6101364`). To build `Yosys` and `OpenROAD` in `OpenROAD-flow-scripts` run:
 
 <!-- name="build-openroad" -->
 ```
@@ -43,7 +43,7 @@ sudo ./tools/OpenROAD/etc/DependencyInstaller.sh -common
 export PATH=$PATH:$(pwd)/tools/install/OpenROAD/bin/
 ```
 
-- [trace2power](https://github.com/antmicro/trace2power/tree/72335-peak-power-analysis) from the `74949-glitch-power` branch in case of peak and glitch power analysis. To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
+- [trace2power](https://github.com/antmicro/trace2power) (tested on commit `9c2dc78`). To build it, you also need to have [rust](https://www.rust-lang.org/) installed:
 
 <!-- name="build-trace-to-power" -->
 ```
@@ -74,7 +74,7 @@ cd ext/OpenROAD-flow-scripts
 make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
 ```
 
-Finally, copy the result of synthesis to the relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
+Finally, copy the result of synthesis to the relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
 
 ## Static power analysis workflow
 
@@ -90,7 +90,7 @@ cd example/
 verilator --build --exe -f post_synthesis.vc --trace-saif --trace-structs --trace-params --trace-max-array 1024 \
     -CFLAGS "-std=c++14 -Wall -DVM_TRACE_FMT_SAIF -DTOPLEVEL_NAME=ibex_simple_system -g" \
     -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
-./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+timeout 5 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf || true
 ```
 
 This will generate the `sim.saif` file in the current directory with the SAIF trace output.
@@ -168,7 +168,7 @@ cd example/
 verilator --build --exe -f post_synthesis.vc --trace --trace-structs --trace-params --trace-max-array 1024 \
     -CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=ibex_simple_system -g" \
     -LDFLAGS "-pthread -lutil -lelf" -Wno-fatal --unroll-count 72 --timing --timescale 1ns/10ps
-./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf
+timeout 5 ./out/Vibex_simple_system -t --meminit=ram,./hello_test/hello_test.elf || true
 ```
 
 This will generate a `sim.vcd` file in the current directory with the VCD trace output.
@@ -319,7 +319,7 @@ Finally, copy the result of synthesis to the relevant example directory:
 
 <!-- name="copy-synthesized-netlist-scoped" -->
 ```
-cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
+cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
 ```
 
 ### Generating a VCD file from trace

@@ -21,154 +21,154 @@ defaults:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
-  static-power-analysis:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04]
-    runs-on: ${{ matrix.os }}
-    name: Static power verilator flow | ${{ matrix.os }}
-    env:
-      CI_BUILD_STAGE_NAME: build
-      CI_RUNS_ON: ${{ matrix.os }}
-      CACHE_BASE_KEY: build-${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: 'recursive'
+  # static-power-analysis:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-24.04]
+  #   runs-on: ${{ matrix.os }}
+  #   name: Static power verilator flow | ${{ matrix.os }}
+  #   env:
+  #     CI_BUILD_STAGE_NAME: build
+  #     CI_RUNS_ON: ${{ matrix.os }}
+  #     CACHE_BASE_KEY: build-${{ matrix.os }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
-          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev libyaml-cpp-dev libgl1-mesa-dev
+  #         pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
 
-      - name: Build Verilator
-        run: |
-          tuttest README.md build-verilator | bash -
+  #     - name: Build Verilator
+  #       run: |
+  #         tuttest README.md build-verilator | bash -
 
-      - name: Update OpenROAD ibex sources
-        run: |
-          tuttest README.md copy-model-sources | bash -
+  #     - name: Update OpenROAD ibex sources
+  #       run: |
+  #         tuttest README.md copy-model-sources | bash -
 
-      - name: Build OpenROAD
-        run: |
-          tuttest README.md build-openroad | bash -
+  #     - name: Build OpenROAD
+  #       run: |
+  #         tuttest README.md build-openroad | bash -
 
-      - name: Run synth and route
-        run: |
-          tuttest README.md run-synthesis-steps | bash -
+  #     - name: Run synth and route
+  #       run: |
+  #         tuttest README.md run-synthesis-steps | bash -
 
-      - name: Copy synthesized model to the example directory
-        run: |
-          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
+  #     - name: Copy synthesized model to the example directory
+  #       run: |
+  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
 
-      - name: Generate SAIF file from simulation trace
-        run: |
-          export PATH=$PATH:$(pwd)/ext/verilator/bin/
-          tuttest README.md generate-saif-file | bash -
+  #     - name: Generate SAIF file from simulation trace
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/verilator/bin/
+  #         tuttest README.md generate-saif-file | bash -
 
-      - name: Generate power consumption report
-        run: |
-          export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+  #     - name: Generate power consumption report
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
-          tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
+  #         tuttest README.md copy-required-artifacts,export-liberty-path,execute-openroad-commands | bash -
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6.0.0
-        with:
-          name: static power analysis report
-          path: |
-            ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-            example/sim.saif
-            example/ibex_simple_system.log
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v6.0.0
+  #       if: ${{ !cancelled() }}
+  #       with:
+  #         name: static power analysis report
+  #         path: |
+  #           ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+  #           example/sim.saif
+  #           example/ibex_simple_system.log
 
-  peak-power-analysis:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04]
-    runs-on: ${{ matrix.os }}
-    name: Peak power analysis flow | ${{ matrix.os }}
-    env:
-      CI_BUILD_STAGE_NAME: build
-      CI_RUNS_ON: ${{ matrix.os }}
-      CACHE_BASE_KEY: build-${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: 'recursive'
+  # peak-power-analysis:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-24.04]
+  #   runs-on: ${{ matrix.os }}
+  #   name: Peak power analysis flow | ${{ matrix.os }}
+  #   env:
+  #     CI_BUILD_STAGE_NAME: build
+  #     CI_RUNS_ON: ${{ matrix.os }}
+  #     CACHE_BASE_KEY: build-${{ matrix.os }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
-          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev libyaml-cpp-dev libgl1-mesa-dev
+  #         pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
+  #         curl https://sh.rustup.rs -sSf | sh -s -- -y
 
-      - name: Build Verilator
-        run: |
-          tuttest README.md build-verilator | bash -
+  #     - name: Build Verilator
+  #       run: |
+  #         tuttest README.md build-verilator | bash -
 
-      - name: Update OpenROAD ibex sources
-        run: |
-          tuttest README.md copy-model-sources | bash -
+  #     - name: Update OpenROAD ibex sources
+  #       run: |
+  #         tuttest README.md copy-model-sources | bash -
 
-      - name: Build OpenROAD
-        run: |
-          tuttest README.md build-openroad | bash -
+  #     - name: Build OpenROAD
+  #       run: |
+  #         tuttest README.md build-openroad | bash -
 
-      - name: Build trace2power
-        run: |
-          source $HOME/.cargo/env
+  #     - name: Build trace2power
+  #       run: |
+  #         source $HOME/.cargo/env
 
-          tuttest README.md build-trace-to-power | bash -
+  #         tuttest README.md build-trace-to-power | bash -
 
-      - name: Run synth and route
-        run: |
-          tuttest README.md run-synthesis-steps | bash -
+  #     - name: Run synth and route
+  #       run: |
+  #         tuttest README.md run-synthesis-steps | bash -
 
-      - name: Copy synthesized model to the example directory
-        run: |
-          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
+  #     - name: Copy synthesized model to the example directory
+  #       run: |
+  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
 
-      - name: Generate VCD file from simulation trace
-        run: |
-          export PATH=$PATH:$(pwd)/ext/verilator/bin/
+  #     - name: Generate VCD file from simulation trace
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/verilator/bin/
 
-          tuttest README.md generate-vcd-file | bash -
+  #         tuttest README.md generate-vcd-file | bash -
 
-      - name: Process base power from VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
+  #     - name: Process base power from VCD with trace2power
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
 
-          tuttest README.md process-empty-vcd-output | bash -
+  #         tuttest README.md process-empty-vcd-output | bash -
 
-      - name: Process total power from VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
+  #     - name: Process total power from VCD with trace2power
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
 
-          tuttest README.md process-total-vcd-output | bash -
+  #         tuttest README.md process-total-vcd-output | bash -
 
-      - name: Generate peak power report
-        run: |
-          export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+  #     - name: Generate peak power report
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
 
-          tuttest README.md copy-required-peak-power-artifacts,export-liberty-path,execute-peak-power-script | bash -
+  #         tuttest README.md copy-required-peak-power-artifacts,export-liberty-path,execute-peak-power-script | bash -
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6.0.0
-        with:
-          name: peak power analysis report
-          path: |
-            ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-            example/sim.vcd
-            example/ibex_simple_system.log
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v6.0.0
+  #       with:
+  #         name: peak power analysis report
+  #         path: |
+  #           ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+  #           example/sim.vcd
+  #           example/ibex_simple_system.log
 
   glitch-power-analysis:
     strategy:
@@ -190,7 +190,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
+          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev libyaml-cpp-dev libgl1-mesa-dev
           pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest matplotlib
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
@@ -218,7 +218,7 @@ jobs:
 
       - name: Copy synthesized model to the example directory
         run: |
-          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
+          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
 
       - name: Generate VCD file from simulation trace
         run: |
@@ -259,76 +259,76 @@ jobs:
             example/sim.vcd
             example/ibex_simple_system.log
 
-  scoped-power-analysis:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04]
-    runs-on: ${{ matrix.os }}
-    name: Scoped power analysis flow | ${{ matrix.os }}
-    env:
-      CI_BUILD_STAGE_NAME: build
-      CI_RUNS_ON: ${{ matrix.os }}
-      CACHE_BASE_KEY: build-${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: 'recursive'
+  # scoped-power-analysis:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-24.04]
+  #   runs-on: ${{ matrix.os }}
+  #   name: Scoped power analysis flow | ${{ matrix.os }}
+  #   env:
+  #     CI_BUILD_STAGE_NAME: build
+  #     CI_RUNS_ON: ${{ matrix.os }}
+  #     CACHE_BASE_KEY: build-${{ matrix.os }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev
-          pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y g++-12 gcc clang make flex bison help2man perl python3 python3-dev libfl2 libfl-dev zlib1g zlib1g-dev ccache mold libunwind-dev libgoogle-perftools-dev numactl tcl tcl-dev swig cmake libeigen3-dev time libreadline-dev pipx libboost-all-dev libgtest-dev libspdlog-dev liblemon-dev golang-github-intel-tfortools-dev libppix-editortools-perl klayout libelf-dev libyaml-cpp-dev libgl1-mesa-dev
+  #         pip3 install pyyaml tuttest@git+https://github.com/antmicro/tuttest
+  #         curl https://sh.rustup.rs -sSf | sh -s -- -y
 
-      - name: Build Verilator
-        run: |
-          tuttest README.md build-verilator | bash -
+  #     - name: Build Verilator
+  #       run: |
+  #         tuttest README.md build-verilator | bash -
 
-      - name: Build OpenROAD
-        run: |
-          tuttest README.md build-openroad | bash -
+  #     - name: Build OpenROAD
+  #       run: |
+  #         tuttest README.md build-openroad | bash -
 
-      - name: Build trace2power
-        run: |
-          source $HOME/.cargo/env
+  #     - name: Build trace2power
+  #       run: |
+  #         source $HOME/.cargo/env
 
-          tuttest README.md build-trace-to-power | bash -
+  #         tuttest README.md build-trace-to-power | bash -
 
-      - name: Update OpenROAD ibex sources
-        run: |
-          tuttest README.md copy-model-sources | bash -
+  #     - name: Update OpenROAD ibex sources
+  #       run: |
+  #         tuttest README.md copy-model-sources | bash -
 
-      - name: Run synth and route
-        run: |
-          tuttest README.md run-synthesis-steps | bash -
+  #     - name: Run synth and route
+  #       run: |
+  #         tuttest README.md run-synthesis-steps | bash -
 
-      - name: Copy synthesized model to the example directory
-        run: |
-          tuttest README.md copy-synthesized-netlist-scoped | bash -
+  #     - name: Copy synthesized model to the example directory
+  #       run: |
+  #         tuttest README.md copy-synthesized-netlist-scoped | bash -
 
-      - name: Generate VCD file from simulation trace
-        run: |
-          export PATH=$PATH:$(pwd)/ext/verilator/bin/
-          tuttest README.md generate-vcd-file-scoped | bash -
+  #     - name: Generate VCD file from simulation trace
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/verilator/bin/
+  #         tuttest README.md generate-vcd-file-scoped | bash -
 
-      - name: Generate scoped power TCL from VCD with trace2power
-        run: |
-          export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
-          tuttest README.md generate-scoped-power-tcl | bash -
+  #     - name: Generate scoped power TCL from VCD with trace2power
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/trace2power/target/release/
+  #         tuttest README.md generate-scoped-power-tcl | bash -
 
-      - name: Generate scoped power consumption report
-        run: |
-          export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
-          tuttest README.md copy-scoped-power-artifacts,export-liberty-path,execute-scoped-openroad-commands | bash -
+  #     - name: Generate scoped power consumption report
+  #       run: |
+  #         export PATH=$PATH:$(pwd)/ext/OpenROAD-flow-scripts/tools/install/OpenROAD/bin/
+  #         tuttest README.md copy-scoped-power-artifacts,export-liberty-path,execute-scoped-openroad-commands | bash -
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6.0.0
-        with:
-          name: scoped power analysis report
-          path: |
-            ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
-            example/sim.vcd
-            example/ibex_simple_system.log
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v6.0.0
+  #       with:
+  #         name: scoped power analysis report
+  #         path: |
+  #           ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/
+  #           example/sim.vcd
+  #           example/ibex_simple_system.log
