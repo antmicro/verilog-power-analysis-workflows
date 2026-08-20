@@ -9,4 +9,4 @@
 	url = git@github.com:antmicro/trace2power.git
 [submodule "ext/OpenROAD-flow-scripts"]
 	path = ext/OpenROAD-flow-scripts
-	url = git@github.com:The-OpenROAD-Project/OpenROAD-flow-scripts.git
+	url = git@github.com:antmicro/OpenROAD-flow-scripts.git
