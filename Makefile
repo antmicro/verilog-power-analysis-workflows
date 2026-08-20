@@ -66,9 +66,9 @@ copy_designs: $(TEST_DIR)/design/* $(TEST_DIR)/verilog/ibex_core/*
 	cp $(TEST_DIR)/verilog/ibex_core/* $(ORFS)/flow/designs/src/ibex/
 
 
-synthesis: $(RESULTS_DIR)/1_2_yosys.v
-.PRECIOUS: $(RESULTS_DIR)/1_2_yosys.v
-$(RESULTS_DIR)/1_2_yosys.v: copy_designs
+synthesis: $(RESULTS_DIR)/1_synth.v
+.PRECIOUS: $(RESULTS_DIR)/1_synth.v
+$(RESULTS_DIR)/1_synth.v: copy_designs
 	cd $(ORFS) && make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk synth || true
 	cp -v $@ $(SYNTH_FILE)
 

@@ -74,7 +74,7 @@ cd ext/OpenROAD-flow-scripts
 make -C flow DESIGN_CONFIG=designs/asap7/ibex/config.mk route
 ```
 
-Finally, copy the result of synthesis to the relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
+Finally, copy the result of synthesis to the relevant example directory, i.e. from `~/dev/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v` to `example/verilog/ibex_core/ibex_core_synth.v`.
 
 ## Static power analysis workflow
 
@@ -319,7 +319,7 @@ Finally, copy the result of synthesis to the relevant example directory:
 
 <!-- name="copy-synthesized-netlist-scoped" -->
 ```
-cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
+cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
 ```
 
 ### Generating a VCD file from trace

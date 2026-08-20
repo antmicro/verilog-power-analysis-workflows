@@ -64,7 +64,7 @@ jobs:
 
   #     - name: Copy synthesized model to the example directory
   #       run: |
-  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
+  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
 
   #     - name: Generate SAIF file from simulation trace
   #       run: |
@@ -135,7 +135,7 @@ jobs:
 
   #     - name: Copy synthesized model to the example directory
   #       run: |
-  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
+  #         cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
 
   #     - name: Generate VCD file from simulation trace
   #       run: |
@@ -218,7 +218,7 @@ jobs:
 
       - name: Copy synthesized model to the example directory
         run: |
-          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_2_yosys.v example/ibex_core_synth.v
+          cp ext/OpenROAD-flow-scripts/flow/results/asap7/ibex/base/1_synth.v example/ibex_core_synth.v
 
       - name: Generate VCD file from simulation trace
         run: |
